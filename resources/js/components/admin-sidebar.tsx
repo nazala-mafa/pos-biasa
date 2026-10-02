@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft, LayoutGrid, Store, Users } from "lucide-react";
+import { ArrowLeft, LayoutGrid, Megaphone, Store, Users } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { dashboard as adminDashboard } from "@/routes/admin";
+import { edit as landingPageEdit } from "@/routes/admin/landing-page";
 import { index as outletsIndex } from "@/routes/admin/outlets";
 import { index as usersIndex } from "@/routes/admin/users";
 import type { NavItem } from "@/types";
@@ -22,6 +23,7 @@ const adminNavItems: NavItem[] = [
     { title: "Dashboard", href: adminDashboard(), icon: LayoutGrid },
     { title: "Outlets", href: outletsIndex(), icon: Store },
     { title: "Users", href: usersIndex(), icon: Users },
+    { title: "Landing page", href: landingPageEdit(), icon: Megaphone },
 ];
 
 export function AdminSidebar() {

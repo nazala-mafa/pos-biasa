@@ -1,5 +1,6 @@
 import { Link, usePage } from "@inertiajs/react";
 import {
+    BarChart3,
     Database,
     LayoutGrid,
     Package,
@@ -26,6 +27,13 @@ import { index as customersIndex } from "@/routes/customers";
 import { index as inventoryIndex } from "@/routes/inventory";
 import { index as productsIndex } from "@/routes/products";
 import { index as purchasesIndex } from "@/routes/purchases";
+import {
+    finance as financeReport,
+    profitLoss as profitLossReport,
+    purchases as purchasesReport,
+    sales as salesReport,
+    stock as stockReport,
+} from "@/routes/reports";
 import { index as returnsIndex } from "@/routes/returns";
 import { index as shiftsIndex } from "@/routes/shifts";
 import { index as stockOpnamesIndex } from "@/routes/stock-opnames";
@@ -124,6 +132,14 @@ export function AppSidebar() {
         },
     ]);
 
+    const reportItems = groupItems([
+        { title: t('Sales Report'), href: salesReport(team), permission: "reports.sales" },
+        { title: t('Purchase Report'), href: purchasesReport(team), permission: "reports.purchases" },
+        { title: t('Stock Report'), href: stockReport(team), permission: "reports.stock" },
+        { title: t('Financial Report'), href: financeReport(team), permission: "reports.finance" },
+        { title: t('Profit/Loss Report'), href: profitLossReport(team), permission: "reports.profit-loss" },
+    ]);
+
     const administrationItems = groupItems([
         { title: t('Users'), href: usersIndex(team), permission: "users.view" },
         { title: t('Roles'), href: rolesIndex(team), permission: "roles.view" },
@@ -142,6 +158,16 @@ export function AppSidebar() {
                       href: posItems[0].href,
                       icon: Package,
                       children: posItems,
+                  },
+              ]
+            : []),
+        ...(reportItems.length > 0
+            ? [
+                  {
+                      title: t('Reporting'),
+                      href: reportItems[0].href,
+                      icon: BarChart3,
+                      children: reportItems,
                   },
               ]
             : []),

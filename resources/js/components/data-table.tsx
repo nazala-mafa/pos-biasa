@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns3, Download } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Heading from "@/components/heading";
@@ -29,6 +29,8 @@ export type DataTableColumn<T> = {
     cell: (row: T) => ReactNode;
     /** Plain-text value used by the search filter. */
     searchValue?: (row: T) => string;
+    /** Value written to the exported file; falls back to the search value. */
+    exportValue?: (row: T) => string | number;
     /** ISO date string; when any column defines it, a date range filter is shown. */
     dateValue?: (row: T) => string | null;
     hiddenByDefault?: boolean;
@@ -46,6 +48,16 @@ type DataTableProps<T> = {
     rowKey: (row: T) => string | number;
     rowTestId?: string;
     searchPlaceholder?: string;
+    /** When set, an export button downloads the filtered rows and visible columns as CSV. */
+    exportFilename?: string;
+    /** Rendered above the table with the rows that match the current filters. */
+    summary?: (filteredRows: T[]) => ReactNode;
+};
+
+const csvCell = (value: string | number): string => {
+    const text = String(value);
+
+    return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
 const LIMIT_OPTIONS = [10, 25, 50, 100];
@@ -60,6 +72,8 @@ export default function DataTable<T>({
     rowKey,
     rowTestId,
     searchPlaceholder = "Search...",
+    exportFilename,
+    summary,
 }: DataTableProps<T>) {
     const { t } = useTranslation();
     const [search, setSearch] = useState("");
@@ -122,6 +136,33 @@ export default function DataTable<T>({
         );
     };
 
+    const exportCsv = () => {
+        const lines = [
+            visibleColumns.map((column) => csvCell(t(column.header))).join(","),
+            ...filteredRows.map((row) =>
+                visibleColumns
+                    .map((column) =>
+                        csvCell(
+                            column.exportValue?.(row) ??
+                                column.searchValue?.(row) ??
+                                "",
+                        ),
+                    )
+                    .join(","),
+            ),
+        ];
+        const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
+            type: "text/csv;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = `${exportFilename}-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <PageContainer size={size} className="flex flex-col space-y-6 p-4">
             <div className="flex items-center justify-between gap-4">
@@ -174,7 +215,18 @@ export default function DataTable<T>({
                     </div>
                 ) : null}
 
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                    {exportFilename ? (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={exportCsv}
+                            disabled={filteredRows.length === 0}
+                            data-test="datatable-export-button"
+                        >
+                            <Download /> {t("Export")}
+                        </Button>
+                    ) : null}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
@@ -202,6 +254,8 @@ export default function DataTable<T>({
                     </DropdownMenu>
                 </div>
             </div>
+
+            {summary ? summary(filteredRows) : null}
 
             <div className="overflow-x-auto rounded-xl border">
                 <table className="w-full text-sm">

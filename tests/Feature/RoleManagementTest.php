@@ -33,10 +33,10 @@ test('non admins are forbidden', function () {
 
 test('admin can create a role with permissions', function () {
     $this->actingAs($this->admin)
-        ->post(route('roles.store'), ['name' => 'auditor', 'permissions' => ['reports.view']])
+        ->post(route('roles.store'), ['name' => 'auditor', 'permissions' => ['reports.sales']])
         ->assertRedirect(route('roles.index'));
 
-    expect(Role::findByName('auditor')->hasPermissionTo('reports.view'))->toBeTrue();
+    expect(Role::findByName('auditor')->hasPermissionTo('reports.sales'))->toBeTrue();
 });
 
 test('role name must be unique', function () {
@@ -106,7 +106,7 @@ test('role form lists permissions grouped by sidebar group and menu in sidebar o
             ->where('permissions.0.group', 'POS')
             ->where('permissions.0.menus.0.menu', 'sales')
             ->where('permissions.0.menus.0.permissions', ['sales.view', 'sales.create', 'sales.refund'])
-            ->where('permissions', fn ($groups) => collect($groups)->pluck('group')->all() === ['POS', 'Master Data', 'Administration']));
+            ->where('permissions', fn ($groups) => collect($groups)->pluck('group')->all() === ['POS', 'Reporting', 'Master Data', 'Administration']));
 });
 
 test('editing a role does not affect the same role of another outlet', function () {

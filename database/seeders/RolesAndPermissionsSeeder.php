@@ -26,7 +26,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'purchases' => ['purchases.view', 'purchases.create', 'purchases.receive', 'purchases.cancel'],
             'inventory' => ['inventory.view', 'inventory.adjust'],
             'stock-opnames' => ['stock-opnames.view', 'stock-opnames.create'],
-            'reports' => ['reports.view'],
+        ],
+        'Reporting' => [
+            'sales-report' => ['reports.sales'],
+            'purchase-report' => ['reports.purchases'],
+            'stock-report' => ['reports.stock'],
+            'financial-report' => ['reports.finance'],
+            'profit-loss-report' => ['reports.profit-loss'],
         ],
         'Master Data' => [
             'categories' => ['categories.view', 'categories.create', 'categories.update', 'categories.delete'],

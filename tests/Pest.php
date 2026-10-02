@@ -60,13 +60,13 @@ function testRole(string $name): Role
 {
     $presets = [
         'admin' => [
-            'products.*', 'customers.*', 'suppliers.*', 'inventory.*', 'sales.*', 'reports.view',
+            'products.*', 'customers.*', 'suppliers.*', 'inventory.*', 'sales.*', 'reports.*',
             'categories.*', 'units.*', 'prices.*', 'taxes.*', 'users.*', 'roles.*',
             'returns.*', 'shifts.*', 'purchases.*', 'stock-opnames.*', 'payment-methods.*',
         ],
         'manager' => [
             'products.*', 'customers.view', 'customers.create', 'customers.update',
-            'suppliers.view', 'suppliers.create', 'suppliers.update', 'inventory.*', 'sales.*', 'reports.view',
+            'suppliers.view', 'suppliers.create', 'suppliers.update', 'inventory.*', 'sales.*', 'reports.*',
             'categories.view', 'units.view', 'prices.view', 'taxes.view',
             'returns.*', 'shifts.*', 'purchases.*', 'stock-opnames.*', 'payment-methods.view',
         ],

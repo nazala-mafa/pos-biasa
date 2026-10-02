@@ -20,7 +20,7 @@ test('seeder creates permissions only', function () {
     testRole('admin');
     testRole('cashier');
 
-    expect(Role::findByName('admin')->hasPermissionTo('reports.view'))->toBeTrue()
+    expect(Role::findByName('admin')->hasPermissionTo('reports.sales'))->toBeTrue()
         ->and(Role::findByName('cashier')->hasPermissionTo('sales.create'))->toBeTrue()
         ->and(Role::findByName('cashier')->hasPermissionTo('sales.refund'))->toBeFalse();
 });
@@ -35,5 +35,5 @@ test('user inherits permissions from assigned role', function () {
     $user = User::factory()->create()->assignRole(testRole('cashier'));
 
     expect($user->can('sales.create'))->toBeTrue()
-        ->and($user->can('reports.view'))->toBeFalse();
+        ->and($user->can('reports.sales'))->toBeFalse();
 });

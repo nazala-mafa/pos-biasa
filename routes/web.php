@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LandingPageController as AdminLandingPageController;
 use App\Http\Controllers\Admin\OutletController as AdminOutletController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\MasterData\PaymentMethodController;
 use App\Http\Controllers\MasterData\PriceController;
 use App\Http\Controllers\MasterData\ProductCategoryController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Pos\DashboardController;
 use App\Http\Controllers\Pos\InventoryController;
 use App\Http\Controllers\Pos\ProductController;
 use App\Http\Controllers\Pos\PurchaseOrderController;
+use App\Http\Controllers\Pos\ReportController;
 use App\Http\Controllers\Pos\RoleController;
 use App\Http\Controllers\Pos\SaleController;
 use App\Http\Controllers\Pos\SaleReturnController;
@@ -24,7 +27,7 @@ use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', LandingPageController::class)->name('home');
 
 Route::middleware(['auth', 'verified', 'superadmin'])
     ->prefix('admin')
@@ -36,6 +39,8 @@ Route::middleware(['auth', 'verified', 'superadmin'])
         Route::post('outlets/{outlet}/import', [AdminOutletController::class, 'import'])->name('outlets.import');
         Route::resource('outlets', AdminOutletController::class)->except('show');
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('landing-page', [AdminLandingPageController::class, 'edit'])->name('landing-page.edit');
+        Route::put('landing-page', [AdminLandingPageController::class, 'update'])->name('landing-page.update');
     });
 
 Route::prefix('{current_team}')
@@ -64,6 +69,17 @@ Route::prefix('{current_team}')
                 Route::get('movements', 'movements')->name('movements');
                 Route::get('create', 'create')->name('create');
                 Route::post('/', 'store')->name('store');
+            });
+
+        Route::prefix('reports')
+            ->name('reports.')
+            ->controller(ReportController::class)
+            ->group(function () {
+                Route::get('sales', 'sales')->name('sales');
+                Route::get('purchases', 'purchases')->name('purchases');
+                Route::get('stock', 'stock')->name('stock');
+                Route::get('finance', 'finance')->name('finance');
+                Route::get('profit-loss', 'profitLoss')->name('profit-loss');
             });
 
         Route::prefix('management')->group(function () {

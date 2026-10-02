@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\Product;
+use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
@@ -132,4 +135,40 @@ test('dashboard does not include or delete other users invitations', function ()
     $this->assertDatabaseHas('team_invitations', [
         'id' => $invitation->id,
     ]);
+});
+
+test('dashboard summary reports sales kpis, top products and low stock for the current outlet', function () {
+    $user = User::factory()->create();
+    $outlet = $user->currentTeam;
+    $other = Team::factory()->create();
+
+    $product = Product::factory()->create(['team_id' => $outlet->id, 'min_stock' => 5]);
+    $sale = Sale::factory()->create(['team_id' => $outlet->id, 'total' => 100000, 'paid' => 120000, 'change' => 20000]);
+    SaleItem::factory()->create(['sale_id' => $sale->id, 'product_id' => $product->id, 'name' => $product->name, 'quantity' => 3, 'subtotal' => 100000]);
+    Sale::factory()->create(['team_id' => $other->id, 'total' => 999999, 'paid' => 999999, 'change' => 0]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('period', 'today')
+            ->loadDeferredProps(fn (Assert $reload) => $reload
+                ->where('dashboard.kpis.sales', 100000)
+                ->where('dashboard.kpis.transactions', 1)
+                ->where('dashboard.kpis.cashIn', 100000)
+                ->where('dashboard.kpis.receivables', 0)
+                ->has('dashboard.chart', 7)
+                ->where('dashboard.topProducts.0.name', $product->name)
+                ->where('dashboard.lowStock.count', 1)
+            ),
+        );
+});
+
+test('dashboard falls back to today for an unknown period', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard', [$user->currentTeam->slug, 'period' => 'bogus']))
+        ->assertInertia(fn (Assert $page) => $page->where('period', 'today'));
 });

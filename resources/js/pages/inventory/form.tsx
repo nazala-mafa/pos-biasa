@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatQuantity } from "@/lib/format";
 import { index, store } from "@/routes/inventory";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     products: {
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function InventoryForm({ products, suppliers, types }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const [productId, setProductId] = useState("");
     const [type, setType] = useState("in");
@@ -31,14 +33,14 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
             {({ errors, processing }) => (
                 <FormLayout
                     size="md"
-                    title="New stock movement"
-                    description="Record stock in, stock out or an adjustment"
+                    title={t("New stock movement")}
+                    description={t("Record stock in, stock out or an adjustment")}
                     processing={processing}
                     cancelHref={index(team).url}
                     saveTestId="stock-movement-save-button"
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="product_id">Product</Label>
+                        <Label htmlFor="product_id">{t("Product")}</Label>
                         <NativeSelect
                             id="product_id"
                             name="product_id"
@@ -48,7 +50,7 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
                             }
                             required
                         >
-                            <option value="">Select a product</option>
+                            <option value="">{t("Select a product")}</option>
                             {products.map((item) => (
                                 <option key={item.id} value={item.id}>
                                     {item.label}
@@ -57,15 +59,16 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
                         </NativeSelect>
                         {product ? (
                             <p className="text-sm text-muted-foreground">
-                                Current stock: {formatQuantity(product.stock)}{" "}
-                                {product.unit ?? ""}
+                                {t("Current stock: :stock", {
+                                    stock: `${formatQuantity(product.stock)} ${product.unit ?? ""}`.trim(),
+                                })}
                             </p>
                         ) : null}
                         <InputError message={errors.product_id} />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="type">Type</Label>
+                        <Label htmlFor="type">{t("Type")}</Label>
                         <NativeSelect
                             id="type"
                             name="type"
@@ -85,8 +88,8 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
                     <div className="grid gap-2">
                         <Label htmlFor="quantity">
                             {type === "adjustment"
-                                ? "Quantity (negative to reduce)"
-                                : "Quantity"}
+                                ? t("Quantity (negative to reduce)")
+                                : t("Quantity")}
                         </Label>
                         <Input
                             id="quantity"
@@ -101,7 +104,7 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
 
                     {type === "in" ? (
                         <div className="grid gap-2">
-                            <Label htmlFor="supplier_id">Supplier</Label>
+                            <Label htmlFor="supplier_id">{t("Supplier")}</Label>
                             <NativeSelect id="supplier_id" name="supplier_id">
                                 <option value="">-</option>
                                 {suppliers.map((item) => (
@@ -115,7 +118,7 @@ export default function InventoryForm({ products, suppliers, types }: Props) {
                     ) : null}
 
                     <div className="grid gap-2">
-                        <Label htmlFor="note">Note</Label>
+                        <Label htmlFor="note">{t("Note")}</Label>
                         <Input id="note" name="note" maxLength={255} />
                         <InputError message={errors.note} />
                     </div>

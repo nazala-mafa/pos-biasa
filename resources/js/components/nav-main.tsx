@@ -17,18 +17,20 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavItem } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 export function NavMain({ items }: { items: NavItem[] }) {
+    const { t } = useTranslation();
     const { isCurrentUrl } = useCurrentUrl();
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("Platform")}</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) =>
                     item.children && item.children.length > 0 ? (
                         <Collapsible
-                            key={item.title}
+                            key={t(item.title)}
                             asChild
                             defaultOpen={item.children.some((child) =>
                                 isCurrentUrl(child.href),
@@ -38,10 +40,10 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton
-                                        tooltip={{ children: item.title }}
+                                        tooltip={{ children: t(item.title) }}
                                     >
                                         {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
+                                        <span>{t(item.title)}</span>
                                         <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
@@ -49,7 +51,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                                     <SidebarMenuSub>
                                         {item.children.map((child) => (
                                             <SidebarMenuSubItem
-                                                key={child.title}
+                                                key={t(child.title)}
                                             >
                                                 <SidebarMenuSubButton
                                                     asChild
@@ -62,7 +64,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                                                         prefetch
                                                     >
                                                         <span>
-                                                            {child.title}
+                                                            {t(child.title)}
                                                         </span>
                                                     </Link>
                                                 </SidebarMenuSubButton>
@@ -73,15 +75,15 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             </SidebarMenuItem>
                         </Collapsible>
                     ) : (
-                        <SidebarMenuItem key={item.title}>
+                        <SidebarMenuItem key={t(item.title)}>
                             <SidebarMenuButton
                                 asChild
                                 isActive={isCurrentUrl(item.href)}
-                                tooltip={{ children: item.title }}
+                                tooltip={{ children: t(item.title) }}
                             >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    <span>{t(item.title)}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

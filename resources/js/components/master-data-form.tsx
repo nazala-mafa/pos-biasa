@@ -2,6 +2,7 @@ import { Form } from "@inertiajs/react";
 import FormLayout from "@/components/form-layout";
 import type { PageSize } from "@/components/page-container";
 import InputError from "@/components/input-error";
+import { useTranslation } from "@/hooks/use-translation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -34,6 +35,7 @@ export default function MasterDataForm({
     updateForm,
     size,
 }: Props) {
+    const { t } = useTranslation();
     const formAction = record && updateForm ? updateForm(record.id) : storeForm;
 
     return (
@@ -41,7 +43,9 @@ export default function MasterDataForm({
             {({ errors, processing }) => (
                 <FormLayout
                     size={size}
-                    title={record ? `Edit ${itemLabel}` : `New ${itemLabel}`}
+                    title={t(record ? "Edit :item" : "New :item", {
+                        item: t(itemLabel),
+                    })}
                     description={title}
                     processing={processing}
                     cancelHref={indexUrl}
@@ -54,7 +58,7 @@ export default function MasterDataForm({
                         return (
                             <div key={field.name} className="grid gap-2">
                                 <Label htmlFor={field.name}>
-                                    {field.label}
+                                    {t(field.label)}
                                 </Label>
                                 {field.type === "textarea" ? (
                                     <textarea

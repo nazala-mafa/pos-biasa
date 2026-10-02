@@ -16,6 +16,7 @@ import { dashboard as adminDashboard } from "@/routes/admin";
 import { index as outletsIndex } from "@/routes/admin/outlets";
 import { index as usersIndex } from "@/routes/admin/users";
 import type { NavItem } from "@/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 const adminNavItems: NavItem[] = [
     { title: "Dashboard", href: adminDashboard(), icon: LayoutGrid },
@@ -24,6 +25,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 export function AdminSidebar() {
+    const { t } = useTranslation();
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -51,7 +53,7 @@ export function AdminSidebar() {
                         >
                             <Link href="/">
                                 <ArrowLeft />
-                                <span>Back to app</span>
+                                <span>{t("Back to app")}</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

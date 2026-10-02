@@ -4,19 +4,21 @@ import PendingInvitationsModal from '@/components/pending-invitations-modal';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
 import type { DashboardInvitation } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Props = {
     pendingInvitations?: DashboardInvitation[];
 };
 
 export default function Dashboard({ pendingInvitations = [] }: Props) {
+    const { t } = useTranslation();
     const [showInvitations, setShowInvitations] = useState(
         pendingInvitations.length > 0,
     );
 
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title={t("Dashboard")} />
             <PendingInvitationsModal
                 invitations={pendingInvitations}
                 open={pendingInvitations.length > 0 && showInvitations}

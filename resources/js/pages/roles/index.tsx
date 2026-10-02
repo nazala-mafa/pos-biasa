@@ -7,6 +7,7 @@ import type { DataTableColumn } from "@/components/data-table";
 import DeleteConfirmModal from "@/components/delete-confirm-modal";
 import { Button } from "@/components/ui/button";
 import { create, destroy, edit, index } from "@/routes/roles";
+import { useTranslation } from "@/hooks/use-translation";
 
 type RoleRow = {
     id: number;
@@ -17,6 +18,7 @@ type RoleRow = {
 };
 
 export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
     const [roleToDelete, setRoleToDelete] = useState<RoleRow | null>(null);
@@ -26,29 +28,29 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
     const columns: DataTableColumn<RoleRow>[] = [
         {
             id: "name",
-            header: "Name",
+            header: t("Name"),
             searchValue: (role) => role.name,
             cell: (role) => <span className="font-medium">{role.name}</span>,
         },
         {
             id: "permissions",
-            header: "Permissions",
+            header: t("Permissions"),
             cell: (role) => role.permissionsCount,
         },
         {
             id: "users",
-            header: "Users",
+            header: t("Users"),
             cell: (role) => role.usersCount,
         },
         {
             id: "createdAt",
-            header: "Created",
+            header: t("Created"),
             dateValue: (role) => role.createdAt,
             cell: (role) => role.createdAt ?? "-",
         },
         {
             id: "actions",
-            header: "Actions",
+            header: t("Actions"),
             className: "text-right",
             cell: (role) => (
                 <div className="flex items-center justify-end gap-2">
@@ -56,7 +58,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
                         <Button variant="ghost" size="sm" asChild>
                             <Link
                                 href={edit([team, role.id])}
-                                aria-label={`Edit ${role.name}`}
+                                aria-label={`${t("Edit")} ${role.name}`}
                             >
                                 <Pencil className="h-4 w-4" />
                             </Link>
@@ -66,7 +68,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            aria-label={`Delete ${role.name}`}
+                            aria-label={`${t("Delete")} ${role.name}`}
                             onClick={() => setRoleToDelete(role)}
                         >
                             <Trash2 className="h-4 w-4" />
@@ -79,17 +81,17 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
 
     return (
         <>
-            <Head title="Roles" />
+            <Head title={t("Roles")} />
 
             <DataTable
                 size="sm"
-                title="Roles"
-                description="Manage roles and the permissions they grant"
+                title={t("Roles")}
+                description={t("Manage roles and the permissions they grant")}
                 actions={
                     can("roles.create") ? (
                         <Button asChild data-test="roles-new-button">
                             <Link href={create(team)}>
-                                <Plus /> New role
+                                <Plus /> {t("New role")}
                             </Link>
                         </Button>
                     ) : null
@@ -98,11 +100,11 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
                 rows={roles}
                 rowKey={(role) => role.id}
                 rowTestId="role-row"
-                searchPlaceholder="Search roles..."
+                searchPlaceholder={t("Search roles...")}
             />
 
             <DeleteConfirmModal
-                title="Delete role"
+                title={t("Delete role")}
                 name={roleToDelete?.name ?? null}
                 url={roleToDelete ? destroy.url([team, roleToDelete.id]) : null}
                 open={roleToDelete !== null}

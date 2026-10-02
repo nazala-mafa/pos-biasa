@@ -16,8 +16,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { store } from '@/routes/teams';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function CreateTeamModal({ children }: PropsWithChildren) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
 
     return (
@@ -33,20 +35,19 @@ export default function CreateTeamModal({ children }: PropsWithChildren) {
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Create a new team</DialogTitle>
+                                <DialogTitle>{t("Create a new team")}</DialogTitle>
                                 <DialogDescription>
-                                    Create a new team to collaborate with
-                                    others.
+                                    {t("Create a new team to collaborate with others.")}
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Team name</Label>
+                                <Label htmlFor="name">{t("Team name")}</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     data-test="create-team-name"
-                                    placeholder="My team"
+                                    placeholder={t("My team")}
                                     required
                                 />
                                 <InputError message={errors.name} />
@@ -54,7 +55,7 @@ export default function CreateTeamModal({ children }: PropsWithChildren) {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancel</Button>
+                                    <Button variant="secondary">{t("Cancel")}</Button>
                                 </DialogClose>
 
                                 <Button
@@ -62,7 +63,7 @@ export default function CreateTeamModal({ children }: PropsWithChildren) {
                                     data-test="create-team-submit"
                                     disabled={processing}
                                 >
-                                    Create team
+                                    {t("Create team")}
                                 </Button>
                             </DialogFooter>
                         </>

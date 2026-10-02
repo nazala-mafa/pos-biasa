@@ -3,6 +3,7 @@ import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
 import { create, destroy, edit, index } from "@/routes/master-data/categories";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = MasterDataRow & {
     description: string | null;
@@ -18,13 +19,14 @@ const extraColumns: DataTableColumn<Row>[] = [
 ];
 
 export default function ProductCategoriesIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataIndex
             size="md"
-            title="Product Categories"
-            description="Group your products into categories"
+            title={t("Product Categories")}
+            description={t("Group your products into categories")}
             itemLabel="category"
             permissionPrefix="categories"
             rows={rows}

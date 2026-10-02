@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { index, store, update } from "@/routes/users";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     user: { id: number; name: string; email: string; roles: string[] } | null;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function UserForm({ user, roles }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const [selectedRoles, setSelectedRoles] = useState<string[]>(
         user?.roles ?? [],
@@ -31,13 +33,13 @@ export default function UserForm({ user, roles }: Props) {
             {({ errors, processing }) => (
                 <FormLayout
                     size="md"
-                    title={user ? "Edit user" : "New user"}
-                    description="Set account details and assign roles"
+                    title={user ? t("Edit user") : t("New user")}
+                    description={t("Set account details and assign roles")}
                     processing={processing}
                     cancelHref={index(team).url}
                     saveTestId="user-save-button"
                     sidebar={
-                        <SidebarCard title="Roles">
+                        <SidebarCard title={t("Roles")}>
                             <div className="grid gap-3">
                                 {roles.map((role) => (
                                     <div
@@ -75,7 +77,7 @@ export default function UserForm({ user, roles }: Props) {
                     }
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">{t("Name")}</Label>
                         <Input
                             id="name"
                             name="name"
@@ -86,7 +88,7 @@ export default function UserForm({ user, roles }: Props) {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t("Email")}</Label>
                         <Input
                             id="email"
                             name="email"
@@ -99,8 +101,8 @@ export default function UserForm({ user, roles }: Props) {
 
                     <div className="grid gap-2">
                         <Label htmlFor="password">
-                            Password
-                            {user ? " (leave blank to keep current)" : ""}
+                            {t("Password")}
+                            {user ? ` (${t("leave blank to keep current")})` : ""}
                         </Label>
                         <Input
                             id="password"
@@ -114,7 +116,7 @@ export default function UserForm({ user, roles }: Props) {
 
                     <div className="grid gap-2">
                         <Label htmlFor="password_confirmation">
-                            Confirm password
+                            {t("Confirm password")}
                         </Label>
                         <Input
                             id="password_confirmation"

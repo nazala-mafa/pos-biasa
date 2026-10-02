@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     title: string;
@@ -40,9 +41,10 @@ export default function FormLayout({
     sidebar,
     size = "md",
 }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title={title} />
+            <Head title={t(title)} />
 
             <PageContainer
                 size={size}
@@ -50,10 +52,10 @@ export default function FormLayout({
             >
                 <Card className="gap-0 py-0">
                     <CardHeader className="border-b px-6 py-4">
-                        <CardTitle>{title}</CardTitle>
+                        <CardTitle>{t(title)}</CardTitle>
                         {description && (
                             <p className="text-sm text-muted-foreground">
-                                {description}
+                                {t(description)}
                             </p>
                         )}
                     </CardHeader>
@@ -65,7 +67,7 @@ export default function FormLayout({
                 <div className="space-y-6">
                     <Card className="gap-0 py-0">
                         <CardHeader className="border-b px-6 py-4">
-                            <CardTitle>Action</CardTitle>
+                            <CardTitle>{t("Action")}</CardTitle>
                         </CardHeader>
                         {actionFields && (
                             <CardContent className="space-y-4 px-6 pt-4">
@@ -79,14 +81,14 @@ export default function FormLayout({
                                 data-test={saveTestId}
                                 disabled={processing}
                             >
-                                Submit
+                                {t("Submit")}
                             </Button>
                             <Button
                                 variant="secondary"
                                 className="w-full"
                                 asChild
                             >
-                                <Link href={cancelHref}>Cancel</Link>
+                                <Link href={cancelHref}>{t("Cancel")}</Link>
                             </Button>
                         </CardFooter>
                     </Card>
@@ -105,10 +107,12 @@ export function SidebarCard({
     title: string;
     children: ReactNode;
 }) {
+    const { t } = useTranslation();
+
     return (
         <Card className="gap-0 py-0">
             <CardHeader className="border-b px-6 py-4">
-                <CardTitle>{title}</CardTitle>
+                <CardTitle>{t(title)}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-6">{children}</CardContent>
         </Card>

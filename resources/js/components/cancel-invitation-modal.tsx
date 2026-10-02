@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/dialog';
 import { destroy as destroyInvitation } from '@/routes/teams/invitations';
 import type { Team, TeamInvitation } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
+import Trans from '@/components/trans';
 type Props = {
     team: Team;
     invitation: TeamInvitation | null;
@@ -26,6 +28,7 @@ export default function CancelInvitationModal({
     open,
     onOpenChange,
 }: Props) {
+    const { t } = useTranslation();
     const [processing, setProcessing] = useState(false);
 
     const cancelInvitation = () => {
@@ -44,16 +47,18 @@ export default function CancelInvitationModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Cancel invitation</DialogTitle>
+                    <DialogTitle>{t("Cancel invitation")}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to cancel the invitation for{' '}
-                        <strong>{invitation?.email}</strong>?
+                        <Trans
+                            text="Are you sure you want to cancel the invitation for :email?"
+                            values={{ email: <strong>{invitation?.email}</strong> }}
+                        />
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Keep invitation</Button>
+                        <Button variant="secondary">{t("Keep invitation")}</Button>
                     </DialogClose>
 
                     <Button
@@ -62,7 +67,7 @@ export default function CancelInvitationModal({
                         disabled={processing}
                         onClick={cancelInvitation}
                     >
-                        Cancel invitation
+                        {t("Cancel invitation")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

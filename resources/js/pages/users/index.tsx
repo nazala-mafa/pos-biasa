@@ -8,6 +8,7 @@ import DeleteConfirmModal from "@/components/delete-confirm-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { create, destroy, edit, index } from "@/routes/users";
+import { useTranslation } from "@/hooks/use-translation";
 
 type UserRow = {
     id: number;
@@ -18,6 +19,7 @@ type UserRow = {
 };
 
 export default function UsersIndex({ users }: { users: UserRow[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
     const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
@@ -27,19 +29,19 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
     const columns: DataTableColumn<UserRow>[] = [
         {
             id: "name",
-            header: "Name",
+            header: t("Name"),
             searchValue: (user) => user.name,
             cell: (user) => <span className="font-medium">{user.name}</span>,
         },
         {
             id: "email",
-            header: "Email",
+            header: t("Email"),
             searchValue: (user) => user.email,
             cell: (user) => user.email,
         },
         {
             id: "roles",
-            header: "Roles",
+            header: t("Roles"),
             searchValue: (user) => user.roles.join(" "),
             cell: (user) => (
                 <div className="flex flex-wrap gap-1">
@@ -53,13 +55,13 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
         },
         {
             id: "createdAt",
-            header: "Created",
+            header: t("Created"),
             dateValue: (user) => user.createdAt,
             cell: (user) => user.createdAt ?? "-",
         },
         {
             id: "actions",
-            header: "Actions",
+            header: t("Actions"),
             className: "text-right",
             cell: (user) => (
                 <div className="flex items-center justify-end gap-2">
@@ -67,7 +69,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                         <Button variant="ghost" size="sm" asChild>
                             <Link
                                 href={edit([team, user.id])}
-                                aria-label={`Edit ${user.name}`}
+                                aria-label={`${t("Edit")} ${user.name}`}
                             >
                                 <Pencil className="h-4 w-4" />
                             </Link>
@@ -77,7 +79,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                         <Button
                             variant="ghost"
                             size="sm"
-                            aria-label={`Delete ${user.name}`}
+                            aria-label={`${t("Delete")} ${user.name}`}
                             onClick={() => setUserToDelete(user)}
                         >
                             <Trash2 className="h-4 w-4" />
@@ -90,17 +92,17 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
 
     return (
         <>
-            <Head title="Users" />
+            <Head title={t("Users")} />
 
             <DataTable
                 size="md"
-                title="Users"
-                description="Manage user accounts and their roles"
+                title={t("Users")}
+                description={t("Manage user accounts and their roles")}
                 actions={
                     can("users.create") ? (
                         <Button asChild data-test="users-new-button">
                             <Link href={create(team)}>
-                                <Plus /> New user
+                                <Plus /> {t("New user")}
                             </Link>
                         </Button>
                     ) : null
@@ -109,11 +111,11 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                 rows={users}
                 rowKey={(user) => user.id}
                 rowTestId="user-row"
-                searchPlaceholder="Search users..."
+                searchPlaceholder={t("Search users...")}
             />
 
             <DeleteConfirmModal
-                title="Delete user"
+                title={t("Delete user")}
                 name={userToDelete?.name ?? null}
                 url={userToDelete ? destroy.url([team, userToDelete.id]) : null}
                 open={userToDelete !== null}

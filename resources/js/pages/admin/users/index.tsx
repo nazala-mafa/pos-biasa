@@ -4,6 +4,7 @@ import type { DataTableColumn } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { dashboard } from "@/routes/admin";
 import { index } from "@/routes/admin/users";
+import { useTranslation } from "@/hooks/use-translation";
 
 type UserRow = {
     id: number;
@@ -56,18 +57,19 @@ const columns: DataTableColumn<UserRow>[] = [
 ];
 
 export default function AdminUsersIndex({ users }: { users: UserRow[] }) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Users" />
+            <Head title={t("Users")} />
             <DataTable
                 size="lg"
-                title="Users"
-                description="All users with their outlet and role"
+                title={t("Users")}
+                description={t("All users with their outlet and role")}
                 columns={columns}
                 rows={users}
                 rowKey={(user) => user.id}
                 rowTestId="admin-user-row"
-                searchPlaceholder="Search users..."
+                searchPlaceholder={t("Search users...")}
             />
         </>
     );

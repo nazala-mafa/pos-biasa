@@ -1,5 +1,6 @@
 import { InfoIcon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTranslation } from '@/hooks/use-translation';
 import type { TeamInvitationContext } from '@/types';
 
 type Props = {
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export default function TeamInvitationAlert({ invitation, action }: Props) {
+    const { t } = useTranslation();
+
     return (
         <Alert
             data-test="team-invitation-alert"
@@ -15,7 +18,9 @@ export default function TeamInvitationAlert({ invitation, action }: Props) {
         >
             <InfoIcon />
             <AlertDescription className="text-blue-900 dark:text-blue-100">
-                {action} to join the "{invitation.teamName}" team.
+                {t(`${action} to join the ":team" team.`, {
+                    team: invitation.teamName,
+                })}
             </AlertDescription>
         </Alert>
     );

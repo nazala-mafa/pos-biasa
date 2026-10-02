@@ -15,7 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { destroy } from '@/routes/teams';
 import type { Team } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
+import Trans from '@/components/trans';
 type Props = {
     team: Team;
     open: boolean;
@@ -23,6 +25,7 @@ type Props = {
 };
 
 export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
+    const { t } = useTranslation();
     const [confirmationName, setConfirmationName] = useState('');
 
     const canDeleteTeam = confirmationName === team.name;
@@ -47,19 +50,32 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
                     {({ errors, processing }) => (
                         <>
                             <DialogHeader>
-                                <DialogTitle>Are you sure?</DialogTitle>
+                                <DialogTitle>{t("Are you sure?")}</DialogTitle>
                                 <DialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the team{' '}
-                                    <strong>"{team.name}"</strong>.
+                                    <Trans
+                                        text="This action cannot be undone. This will permanently delete the team :name."
+                                        values={{
+                                            name: (
+                                                <strong>"{team.name}"</strong>
+                                            ),
+                                        }}
+                                    />
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-4 py-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="confirmation-name">
-                                        Type <strong>"{team.name}"</strong> to
-                                        confirm
+                                        <Trans
+                                            text="Type :name to confirm"
+                                            values={{
+                                                name: (
+                                                    <strong>
+                                                        "{team.name}"
+                                                    </strong>
+                                                ),
+                                            }}
+                                        />
                                     </Label>
                                     <Input
                                         id="confirmation-name"
@@ -71,7 +87,7 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
                                                 event.target.value,
                                             )
                                         }
-                                        placeholder="Enter team name"
+                                        placeholder={t("Enter team name")}
                                         autoComplete="off"
                                     />
                                     <InputError message={errors.name} />
@@ -80,7 +96,7 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary">Cancel</Button>
+                                    <Button variant="secondary">{t("Cancel")}</Button>
                                 </DialogClose>
 
                                 <Button
@@ -89,7 +105,7 @@ export default function DeleteTeamModal({ team, open, onOpenChange }: Props) {
                                     data-test="delete-team-confirm"
                                     disabled={!canDeleteTeam || processing}
                                 >
-                                    Delete team
+                                    {t("Delete team")}
                                 </Button>
                             </DialogFooter>
                         </>

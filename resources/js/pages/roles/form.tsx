@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { index, store, update } from "@/routes/roles";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     role: { id: number; name: string; permissions: string[] } | null;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function RoleForm({ role, permissions }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const [selected, setSelected] = useState<string[]>(role?.permissions ?? []);
     const formAction = role ? update.form([team, role.id]) : store.form(team);
@@ -42,14 +44,14 @@ export default function RoleForm({ role, permissions }: Props) {
             {({ errors, processing }) => (
                 <FormLayout
                     size="md"
-                    title={role ? "Edit role" : "New role"}
-                    description="Choose which permissions this role grants"
+                    title={role ? t("Edit role") : t("New role")}
+                    description={t("Choose which permissions this role grants")}
                     processing={processing}
                     cancelHref={index(team).url}
                     saveTestId="role-save-button"
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">{t("Name")}</Label>
                         <Input
                             id="name"
                             name="name"
@@ -60,14 +62,14 @@ export default function RoleForm({ role, permissions }: Props) {
                     </div>
 
                     <div className="grid gap-4">
-                        <Label>Permissions</Label>
+                        <Label>{t("Permissions")}</Label>
                         {Object.entries(groups).map(([group, items]) => (
                             <div
                                 key={group}
                                 className="space-y-2 rounded-lg border p-4"
                             >
                                 <div className="text-sm font-medium capitalize">
-                                    {group}
+                                    {t(group)}
                                 </div>
                                 <div className="grid gap-2 sm:grid-cols-2">
                                     {items.map((permission) => (
@@ -87,8 +89,8 @@ export default function RoleForm({ role, permissions }: Props) {
                                                     )
                                                 }
                                             />
-                                            <Label htmlFor={permission}>
-                                                {permission}
+                                            <Label htmlFor={permission} className="capitalize">
+                                                {t(permission.split(".")[1])}
                                             </Label>
                                         </div>
                                     ))}

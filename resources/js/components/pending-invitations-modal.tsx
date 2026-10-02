@@ -10,6 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import type { DashboardInvitation } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Props = {
     invitations: DashboardInvitation[];
@@ -22,6 +23,7 @@ export default function PendingInvitationsModal({
     open,
     onOpenChange,
 }: Props) {
+    const { t } = useTranslation();
     const [processingCode, setProcessingCode] = useState<string | null>(null);
 
     const acceptInvitation = (invitation: DashboardInvitation) => {
@@ -47,10 +49,9 @@ export default function PendingInvitationsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent data-test="pending-invitations-modal">
                 <DialogHeader>
-                    <DialogTitle>Pending team invitations</DialogTitle>
+                    <DialogTitle>{t("Pending team invitations")}</DialogTitle>
                     <DialogDescription>
-                        Accept or decline the teams you have been invited to
-                        join.
+                        {t("Accept or decline the teams you have been invited to join.")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -66,8 +67,9 @@ export default function PendingInvitationsModal({
                                     {invitation.team.name}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                    {invitation.inviterName} invited you to join
-                                    this team.
+                                    {t(':inviter invited you to join this team.', {
+                                        inviter: invitation.inviterName,
+                                    })}
                                 </p>
                             </div>
 
@@ -82,7 +84,7 @@ export default function PendingInvitationsModal({
                                         declineInvitation(invitation)
                                     }
                                 >
-                                    Decline
+                                    {t("Decline")}
                                 </Button>
 
                                 <Button
@@ -92,7 +94,7 @@ export default function PendingInvitationsModal({
                                     }
                                     onClick={() => acceptInvitation(invitation)}
                                 >
-                                    Accept
+                                    {t("Accept")}
                                 </Button>
                             </div>
                         </div>

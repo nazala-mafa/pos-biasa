@@ -2,11 +2,13 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import { History, Plus } from "lucide-react";
 import DataTable from "@/components/data-table";
 import type { DataTableColumn } from "@/components/data-table";
+import { T } from "@/components/trans";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatQuantity } from "@/lib/format";
 import { create, index, movements } from "@/routes/inventory";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = {
     id: number;
@@ -50,11 +52,11 @@ const columns: DataTableColumn<Row>[] = [
         header: "Status",
         cell: (row) =>
             row.stock <= 0 ? (
-                <Badge variant="destructive">Out of stock</Badge>
+                <Badge variant="destructive"><T text="Out of stock" /></Badge>
             ) : row.stock <= row.minStock ? (
-                <Badge variant="outline">Low stock</Badge>
+                <Badge variant="outline"><T text="Low stock" /></Badge>
             ) : (
-                <Badge variant="secondary">In stock</Badge>
+                <Badge variant="secondary"><T text="In stock" /></Badge>
             ),
     },
     {
@@ -67,26 +69,27 @@ const columns: DataTableColumn<Row>[] = [
 ];
 
 export default function InventoryIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
 
     return (
         <>
-            <Head title="Inventory" />
+            <Head title={t("Inventory")} />
             <DataTable
-                title="Inventory"
-                description="Current stock level of every product"
+                title={t("Inventory")}
+                description={t("Current stock level of every product")}
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <Link href={movements(team).url}>
-                                <History /> History
+                                <History /> {t("History")}
                             </Link>
                         </Button>
                         {auth.permissions.includes("inventory.adjust") ? (
                             <Button asChild data-test="inventory-new-button">
                                 <Link href={create(team).url}>
-                                    <Plus /> New stock movement
+                                    <Plus /> {t("New stock movement")}
                                 </Link>
                             </Button>
                         ) : null}
@@ -96,7 +99,7 @@ export default function InventoryIndex({ rows }: { rows: Row[] }) {
                 rows={rows}
                 rowKey={(row) => row.id}
                 rowTestId="inventory-row"
-                searchPlaceholder="Search products..."
+                searchPlaceholder={t("Search products...")}
             />
         </>
     );

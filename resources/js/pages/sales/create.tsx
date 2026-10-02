@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatCurrency, formatQuantity } from "@/lib/format";
 import { index, store } from "@/routes/sales";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Product = {
     id: number;
@@ -41,6 +42,7 @@ export default function SalesCreate({
     customers,
     paymentMethods,
 }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const [search, setSearch] = useState("");
     const [cart, setCart] = useState<Record<number, number>>({});
@@ -119,7 +121,7 @@ export default function SalesCreate({
 
     return (
         <>
-            <Head title="New sale" />
+            <Head title={t("New sale")} />
 
             <PageContainer
                 size="lg"
@@ -128,16 +130,16 @@ export default function SalesCreate({
                 <Card className="gap-0 py-0">
                     <CardHeader className="space-y-3 border-b px-6 py-4">
                         <div>
-                            <CardTitle>New sale</CardTitle>
+                            <CardTitle>{t("New sale")}</CardTitle>
                             <p className="text-sm text-muted-foreground">
-                                Pick the products to sell
+                                {t("Pick the products to sell")}
                             </p>
                         </div>
                         <div className="relative">
                             <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
                             <Input
                                 className="pl-9"
-                                placeholder="Search by name, SKU or category..."
+                                placeholder={t("Search by name, SKU or category...")}
                                 value={search}
                                 onChange={(event) =>
                                     setSearch(event.target.value)
@@ -148,7 +150,7 @@ export default function SalesCreate({
                     <CardContent className="p-6">
                         {visibleProducts.length === 0 ? (
                             <p className="py-8 text-center text-sm text-muted-foreground">
-                                No products found.
+                                {t("No products found.")}
                             </p>
                         ) : (
                             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
@@ -191,8 +193,8 @@ export default function SalesCreate({
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
                                                     {outOfStock
-                                                        ? "Out of stock"
-                                                        : `Stock: ${formatQuantity(product.stock)} ${product.unit ?? ""}`}
+                                                        ? t("Out of stock")
+                                                        : `${t("Stock")}: ${formatQuantity(product.stock)} ${product.unit ?? ""}`}
                                                 </div>
                                             </div>
                                         </button>
@@ -205,12 +207,12 @@ export default function SalesCreate({
 
                 <Card className="gap-0 py-0 lg:sticky lg:top-4">
                     <CardHeader className="border-b px-6 py-4">
-                        <CardTitle>Cart</CardTitle>
+                        <CardTitle>{t("Cart")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 p-6">
                         {lines.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                                The cart is empty.
+                                {t("The cart is empty.")}
                             </p>
                         ) : (
                             <ul className="space-y-3">
@@ -235,7 +237,7 @@ export default function SalesCreate({
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-8 w-8"
-                                                    aria-label={`Decrease ${product.name}`}
+                                                    aria-label={`${t("Decrease")} ${product.name}`}
                                                     onClick={() =>
                                                         setQuantity(
                                                             product,
@@ -251,7 +253,7 @@ export default function SalesCreate({
                                                     min="0"
                                                     max={product.stock}
                                                     className="h-8 w-20 text-center"
-                                                    aria-label={`Quantity ${product.name}`}
+                                                    aria-label={`${t("Quantity")} ${product.name}`}
                                                     value={quantity}
                                                     onChange={(event) =>
                                                         setQuantity(
@@ -268,7 +270,7 @@ export default function SalesCreate({
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-8 w-8"
-                                                    aria-label={`Increase ${product.name}`}
+                                                    aria-label={`${t("Increase")} ${product.name}`}
                                                     onClick={() =>
                                                         setQuantity(
                                                             product,
@@ -283,7 +285,7 @@ export default function SalesCreate({
                                                     variant="ghost"
                                                     size="icon"
                                                     className="ml-auto h-8 w-8"
-                                                    aria-label={`Remove ${product.name}`}
+                                                    aria-label={`${t("Remove")} ${product.name}`}
                                                     onClick={() =>
                                                         setQuantity(product, 0)
                                                     }
@@ -299,7 +301,7 @@ export default function SalesCreate({
                         <InputError message={errors.items} />
 
                         <div className="grid gap-2">
-                            <Label htmlFor="customer_id">Customer</Label>
+                            <Label htmlFor="customer_id">{t("Customer")}</Label>
                             <NativeSelect
                                 id="customer_id"
                                 value={customerId}
@@ -307,7 +309,7 @@ export default function SalesCreate({
                                     setCustomerId(event.target.value)
                                 }
                             >
-                                <option value="">Walk-in customer</option>
+                                <option value="">{t("Walk-in customer")}</option>
                                 {customers.map((customer) => (
                                     <option
                                         key={customer.id}
@@ -322,7 +324,7 @@ export default function SalesCreate({
 
                         <div className="grid gap-2">
                             <Label htmlFor="payment_method">
-                                Payment method
+                                {t("Payment method")}
                             </Label>
                             <NativeSelect
                                 id="payment_method"
@@ -344,7 +346,7 @@ export default function SalesCreate({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="discount">Discount</Label>
+                            <Label htmlFor="discount">{t("Discount")}</Label>
                             <Input
                                 id="discount"
                                 type="number"
@@ -359,7 +361,7 @@ export default function SalesCreate({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="note">Note</Label>
+                            <Label htmlFor="note">{t("Note")}</Label>
                             <Input
                                 id="note"
                                 maxLength={255}
@@ -373,19 +375,19 @@ export default function SalesCreate({
 
                         <dl className="space-y-1 border-t pt-4 text-sm">
                             <div className="flex justify-between">
-                                <dt>Subtotal</dt>
+                                <dt>{t("Subtotal")}</dt>
                                 <dd>{formatCurrency(subtotal)}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt>Tax</dt>
+                                <dt>{t("Tax")}</dt>
                                 <dd>{formatCurrency(tax)}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt>Discount</dt>
+                                <dt>{t("Discount")}</dt>
                                 <dd>- {formatCurrency(discountValue)}</dd>
                             </div>
                             <div className="flex justify-between text-base font-semibold">
-                                <dt>Total</dt>
+                                <dt>{t("Total")}</dt>
                                 <dd data-test="sale-total">
                                     {formatCurrency(total)}
                                 </dd>
@@ -393,7 +395,7 @@ export default function SalesCreate({
                         </dl>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="paid">Amount paid</Label>
+                            <Label htmlFor="paid">{t("Amount paid")}</Label>
                             <Input
                                 id="paid"
                                 type="number"
@@ -406,7 +408,7 @@ export default function SalesCreate({
                                 }
                             />
                             <p className="text-sm text-muted-foreground">
-                                Change: {formatCurrency(Math.max(change, 0))}
+                                {t("Change")}: {formatCurrency(Math.max(change, 0))}
                             </p>
                             <InputError message={errors.paid} />
                         </div>
@@ -423,7 +425,7 @@ export default function SalesCreate({
                             }
                             onClick={submit}
                         >
-                            Complete sale
+                            {t("Complete sale")}
                         </Button>
                         <Button
                             variant="secondary"
@@ -431,7 +433,7 @@ export default function SalesCreate({
                             type="button"
                             onClick={() => router.visit(index(team).url)}
                         >
-                            Cancel
+                            {t("Cancel")}
                         </Button>
                     </CardFooter>
                 </Card>

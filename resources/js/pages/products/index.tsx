@@ -2,10 +2,12 @@ import { ImageIcon } from "lucide-react";
 import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
+import { T } from "@/components/trans";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatCurrency } from "@/lib/format";
 import { create, destroy, edit, index } from "@/routes/products";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = MasterDataRow & {
     photoUrl: string | null;
@@ -78,20 +80,21 @@ const extraColumns: DataTableColumn<Row>[] = [
         header: "Status",
         cell: (row) => (
             <Badge variant={row.isActive ? "default" : "secondary"}>
-                {row.isActive ? "Active" : "Inactive"}
+                <T text={row.isActive ? "Active" : "Inactive"} />
             </Badge>
         ),
     },
 ];
 
 export default function ProductsIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataIndex
             size="lg"
-            title="Products"
-            description="Items sold by this outlet"
+            title={t("Products")}
+            description={t("Items sold by this outlet")}
             itemLabel="product"
             permissionPrefix="products"
             rows={rows}

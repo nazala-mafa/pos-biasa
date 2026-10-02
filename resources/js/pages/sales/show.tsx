@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatCurrency, formatQuantity } from "@/lib/format";
 import { index } from "@/routes/sales";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     sale: {
@@ -35,6 +36,7 @@ type Props = {
 };
 
 export default function SalesShow({ sale }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     const summary: [string, string, boolean?][] = [
@@ -59,13 +61,13 @@ export default function SalesShow({ sale }: Props) {
                                 {sale.createdAt} · {sale.paymentLabel}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                                Customer: {sale.customer ?? "-"} · Cashier:{" "}
-                                {sale.user ?? "-"}
+                                {t("Customer")}: {sale.customer ?? "-"} ·{" "}
+                                {t("Cashier")}: {sale.user ?? "-"}
                             </p>
                         </div>
                         <Button variant="outline" asChild>
                             <Link href={index(team).url}>
-                                <ArrowLeft /> Sales
+                                <ArrowLeft /> {t("Sales")}
                             </Link>
                         </Button>
                     </CardHeader>
@@ -74,16 +76,16 @@ export default function SalesShow({ sale }: Props) {
                             <thead>
                                 <tr className="border-b text-left text-muted-foreground">
                                     <th className="py-2 font-medium">
-                                        Product
+                                        {t("Product")}
                                     </th>
                                     <th className="py-2 text-right font-medium">
-                                        Qty
+                                        {t("Qty")}
                                     </th>
                                     <th className="py-2 text-right font-medium">
-                                        Price
+                                        {t("Price")}
                                     </th>
                                     <th className="py-2 text-right font-medium">
-                                        Subtotal
+                                        {t("Subtotal")}
                                     </th>
                                 </tr>
                             </thead>
@@ -126,7 +128,7 @@ export default function SalesShow({ sale }: Props) {
 
                         {sale.note ? (
                             <p className="text-sm text-muted-foreground">
-                                Note: {sale.note}
+                                {t("Note")}: {sale.note}
                             </p>
                         ) : null}
                     </CardContent>

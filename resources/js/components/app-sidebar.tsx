@@ -33,10 +33,12 @@ import { index as taxesIndex } from "@/routes/master-data/taxes";
 import { index as unitsIndex } from "@/routes/master-data/units";
 import { index as rolesIndex } from "@/routes/roles";
 import { index as usersIndex } from "@/routes/users";
+import { useTranslation } from "@/hooks/use-translation";
 import type { NavItem } from "@/types";
 
 export function AppSidebar() {
     const page = usePage();
+    const { t } = useTranslation();
     const dashboardUrl = page.props.currentTeam
         ? dashboard(page.props.currentTeam.slug)
         : "/";
@@ -46,13 +48,13 @@ export function AppSidebar() {
 
     const masterDataItems: NavItem[] = [
         {
-            title: "Product Category",
+            title: t('Product Category'),
             href: categoriesIndex(team),
             permission: "categories.view",
         },
-        { title: "Unit", href: unitsIndex(team), permission: "units.view" },
-        { title: "Price", href: pricesIndex(team), permission: "prices.view" },
-        { title: "Tax", href: taxesIndex(team), permission: "taxes.view" },
+        { title: t('Unit'), href: unitsIndex(team), permission: "units.view" },
+        { title: t('Price'), href: pricesIndex(team), permission: "prices.view" },
+        { title: t('Tax'), href: taxesIndex(team), permission: "taxes.view" },
     ]
         .filter((item) => permissions.includes(item.permission))
         .map(({ permission: _permission, ...item }) => item);
@@ -66,47 +68,47 @@ export function AppSidebar() {
 
     const posItems = groupItems([
         {
-            title: "Penjualan",
+            title: t('Sales'),
             href: salesIndex(team),
             permission: "sales.view",
         },
         {
-            title: "Produk / Barang",
+            title: t('Products'),
             href: productsIndex(team),
             permission: "products.view",
         },
         {
-            title: "Pelanggan",
+            title: t('Customers'),
             href: customersIndex(team),
             permission: "customers.view",
         },
         {
-            title: "Supplier",
+            title: t('Suppliers'),
             href: suppliersIndex(team),
             permission: "suppliers.view",
         },
         {
-            title: "Stok / Inventory",
+            title: t('Inventory'),
             href: inventoryIndex(team),
             permission: "inventory.view",
         },
     ]);
 
     const administrationItems = groupItems([
-        { title: "Users", href: usersIndex(team), permission: "users.view" },
-        { title: "Roles", href: rolesIndex(team), permission: "roles.view" },
+        { title: t('Users'), href: usersIndex(team), permission: "users.view" },
+        { title: t('Roles'), href: rolesIndex(team), permission: "roles.view" },
     ]);
 
     const mainNavItems: NavItem[] = [
         {
-            title: "Dashboard",
+            title: t('Dashboard'),
             href: dashboardUrl,
             icon: LayoutGrid,
         },
         ...(posItems.length > 0
             ? [
                   {
-                      title: "POS",
+                      title: t('POS'),
                       href: posItems[0].href,
                       icon: Package,
                       children: posItems,
@@ -116,7 +118,7 @@ export function AppSidebar() {
         ...(masterDataItems.length > 0
             ? [
                   {
-                      title: "Master Data",
+                      title: t('Master Data'),
                       href: masterDataItems[0].href,
                       icon: Database,
                       children: masterDataItems,
@@ -126,7 +128,7 @@ export function AppSidebar() {
         ...(administrationItems.length > 0
             ? [
                   {
-                      title: "Administration",
+                      title: t('Administration'),
                       href: administrationItems[0].href,
                       icon: ShieldCheck,
                       children: administrationItems,
@@ -137,7 +139,7 @@ export function AppSidebar() {
 
     const footerNavItems: NavItem[] = [
         ...(page.props.auth.user.is_superadmin
-            ? [{ title: "Admin Panel", href: adminDashboard(), icon: Settings }]
+            ? [{ title: t('Admin Panel'), href: adminDashboard(), icon: Settings }]
             : []),
     ];
 

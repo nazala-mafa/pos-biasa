@@ -3,6 +3,7 @@ import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
 import { create, destroy, edit, index } from "@/routes/master-data/units";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = MasterDataRow & {
     abbreviation: string;
@@ -18,13 +19,14 @@ const extraColumns: DataTableColumn<Row>[] = [
 ];
 
 export default function UnitsIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataIndex
             size="sm"
-            title="Units"
-            description="Units of measure used by products"
+            title={t("Units")}
+            description={t("Units of measure used by products")}
             itemLabel="unit"
             permissionPrefix="units"
             rows={rows}

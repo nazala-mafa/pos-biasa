@@ -2,6 +2,7 @@ import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import MasterDataForm from "@/components/master-data-form";
 import type { MasterDataField } from "@/components/master-data-form";
 import { index, store, update } from "@/routes/master-data/taxes";
+import { useTranslation } from "@/hooks/use-translation";
 
 const fields: MasterDataField[] = [
     { name: "name", label: "Name" },
@@ -13,12 +14,13 @@ export default function TaxesForm({
 }: {
     record: ({ id: number } & Record<string, unknown>) | null;
 }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataForm
             size="sm"
-            title="Taxes"
+            title={t("Taxes")}
             itemLabel="tax"
             record={record}
             fields={fields}

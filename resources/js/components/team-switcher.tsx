@@ -13,12 +13,14 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { switchMethod } from '@/routes/teams';
 import type { Team } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 type TeamSwitcherProps = {
     inHeader?: boolean;
 };
 
 export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
+    const { t } = useTranslation();
     const page = usePage();
     const isMobile = useIsMobile();
     const currentTeam = page.props.currentTeam;
@@ -84,7 +86,7 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
                                     : 'truncate font-semibold'
                             }
                         >
-                            {currentTeam?.name ?? 'Select team'}
+                            {currentTeam?.name ?? t('Select team')}
                         </span>
                     </div>
                     <ChevronsUpDown
@@ -107,7 +109,7 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
                 sideOffset={inHeader ? undefined : 4}
             >
                 <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    Teams
+                    {t("Teams")}
                 </DropdownMenuLabel>
                 {teams.map((team) => (
                     <DropdownMenuItem
@@ -144,7 +146,7 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
                         onSelect={(event) => event.preventDefault()}
                     >
                         <Plus className={inHeader ? 'size-4' : 'h-4 w-4'} />
-                        <span className="text-muted-foreground">New team</span>
+                        <span className="text-muted-foreground">{t("New team")}</span>
                     </DropdownMenuItem>
                 </CreateTeamModal>
             </DropdownMenuContent>

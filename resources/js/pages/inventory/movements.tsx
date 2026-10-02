@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatQuantity } from "@/lib/format";
 import { index, movements } from "@/routes/inventory";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = {
     id: number;
@@ -72,18 +73,19 @@ const columns: DataTableColumn<Row>[] = [
 ];
 
 export default function InventoryMovements({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <>
-            <Head title="Stock history" />
+            <Head title={t("Stock history")} />
             <DataTable
-                title="Stock history"
-                description="Every stock in, stock out and adjustment"
+                title={t("Stock history")}
+                description={t("Every stock in, stock out and adjustment")}
                 actions={
                     <Button variant="outline" asChild>
                         <Link href={index(team).url}>
-                            <ArrowLeft /> Inventory
+                            <ArrowLeft /> {t("Inventory")}
                         </Link>
                     </Button>
                 }
@@ -91,7 +93,7 @@ export default function InventoryMovements({ rows }: { rows: Row[] }) {
                 rows={rows}
                 rowKey={(row) => row.id}
                 rowTestId="stock-movement-row"
-                searchPlaceholder="Search movements..."
+                searchPlaceholder={t("Search movements...")}
             />
         </>
     );

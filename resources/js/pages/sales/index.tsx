@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatCurrency } from "@/lib/format";
 import { create, index, show } from "@/routes/sales";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = {
     id: number;
@@ -20,19 +21,20 @@ type Row = {
 };
 
 export default function SalesIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
 
     const columns: DataTableColumn<Row>[] = [
         {
             id: "createdAt",
-            header: "Date",
+            header: t("Date"),
             dateValue: (row) => row.createdAt,
             cell: (row) => row.createdAt ?? "-",
         },
         {
             id: "invoiceNumber",
-            header: "Invoice",
+            header: t("Invoice"),
             searchValue: (row) => row.invoiceNumber,
             cell: (row) => (
                 <span className="font-medium">{row.invoiceNumber}</span>
@@ -40,27 +42,27 @@ export default function SalesIndex({ rows }: { rows: Row[] }) {
         },
         {
             id: "customer",
-            header: "Customer",
+            header: t("Customer"),
             searchValue: (row) => row.customer ?? "",
             cell: (row) => row.customer ?? "-",
         },
         {
             id: "user",
-            header: "Cashier",
+            header: t("Cashier"),
             searchValue: (row) => row.user ?? "",
             cell: (row) => row.user ?? "-",
             hiddenByDefault: true,
         },
         {
             id: "items",
-            header: "Items",
+            header: t("Items"),
             className: "text-right",
             cell: (row) => row.itemsCount,
             hiddenByDefault: true,
         },
         {
             id: "payment",
-            header: "Payment",
+            header: t("Payment"),
             searchValue: (row) => row.paymentLabel,
             cell: (row) => (
                 <Badge variant="secondary">{row.paymentLabel}</Badge>
@@ -68,21 +70,21 @@ export default function SalesIndex({ rows }: { rows: Row[] }) {
         },
         {
             id: "total",
-            header: "Total",
+            header: t("Total"),
             className: "text-right",
             searchValue: (row) => String(row.total),
             cell: (row) => formatCurrency(row.total),
         },
         {
             id: "actions",
-            header: "Actions",
+            header: t("Actions"),
             className: "text-right",
             cell: (row) => (
                 <div className="flex justify-end">
                     <Button variant="ghost" size="sm" asChild>
                         <Link
                             href={show([team, row.id]).url}
-                            aria-label={`View ${row.invoiceNumber}`}
+                            aria-label={`${t("View")} ${row.invoiceNumber}`}
                         >
                             <Eye className="h-4 w-4" />
                         </Link>
@@ -94,15 +96,15 @@ export default function SalesIndex({ rows }: { rows: Row[] }) {
 
     return (
         <>
-            <Head title="Sales" />
+            <Head title={t("Sales")} />
             <DataTable
-                title="Sales"
-                description="Transactions recorded by this outlet"
+                title={t("Sales")}
+                description={t("Transactions recorded by this outlet")}
                 actions={
                     auth.permissions.includes("sales.create") ? (
                         <Button asChild data-test="sales-new-button">
                             <Link href={create(team).url}>
-                                <Plus /> New sale
+                                <Plus /> {t("New sale")}
                             </Link>
                         </Button>
                     ) : null
@@ -111,7 +113,7 @@ export default function SalesIndex({ rows }: { rows: Row[] }) {
                 rows={rows}
                 rowKey={(row) => row.id}
                 rowTestId="sales-row"
-                searchPlaceholder="Search sales..."
+                searchPlaceholder={t("Search sales...")}
             />
         </>
     );

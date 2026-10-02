@@ -3,6 +3,7 @@ import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
 import { create, destroy, edit, index } from "@/routes/master-data/taxes";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = MasterDataRow & {
     rate: number;
@@ -18,13 +19,14 @@ const extraColumns: DataTableColumn<Row>[] = [
 ];
 
 export default function TaxesIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataIndex
             size="sm"
-            title="Taxes"
-            description="Tax rates applied to sales"
+            title={t("Taxes")}
+            description={t("Tax rates applied to sales")}
             itemLabel="tax"
             permissionPrefix="taxes"
             rows={rows}

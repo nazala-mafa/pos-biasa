@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/dialog';
 import { destroy as destroyMember } from '@/routes/teams/members';
 import type { Team, TeamMember } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
+import Trans from '@/components/trans';
 type Props = {
     team: Team;
     member: TeamMember | null;
@@ -26,6 +28,7 @@ export default function RemoveMemberModal({
     open,
     onOpenChange,
 }: Props) {
+    const { t } = useTranslation();
     const [processing, setProcessing] = useState(false);
 
     const removeMember = () => {
@@ -44,16 +47,18 @@ export default function RemoveMemberModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Remove team member</DialogTitle>
+                    <DialogTitle>{t("Remove team member")}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to remove{' '}
-                        <strong>{member?.name}</strong> from this team?
+                        <Trans
+                            text="Are you sure you want to remove :name from this team?"
+                            values={{ name: <strong>{member?.name}</strong> }}
+                        />
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Cancel</Button>
+                        <Button variant="secondary">{t("Cancel")}</Button>
                     </DialogClose>
 
                     <Button
@@ -62,7 +67,7 @@ export default function RemoveMemberModal({
                         disabled={processing}
                         onClick={removeMember}
                     >
-                        Remove member
+                        {t("Remove member")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -80,6 +80,20 @@ return [
 
     'locale' => env('APP_LOCALE', 'en'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Available Locales
+    |--------------------------------------------------------------------------
+    |
+    | Languages a user can pick for their own account, keyed by locale code.
+    |
+    */
+
+    'available_locales' => [
+        'en' => 'English',
+        'id' => 'Bahasa Indonesia',
+    ],
+
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),

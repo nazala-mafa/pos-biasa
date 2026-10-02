@@ -3,6 +3,7 @@ import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
 import { create, destroy, edit, index } from "@/routes/customers";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Row = MasterDataRow & {
     phone: string | null;
@@ -33,13 +34,14 @@ const extraColumns: DataTableColumn<Row>[] = [
 ];
 
 export default function CustomersIndex({ rows }: { rows: Row[] }) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
 
     return (
         <MasterDataIndex
             size="lg"
-            title="Customers"
-            description="Customers who buy from this outlet"
+            title={t("Customers")}
+            description={t("Customers who buy from this outlet")}
             itemLabel="customer"
             permissionPrefix="customers"
             rows={rows}

@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 import type { TeamInvitationContext } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 type Props = {
     passwordRules: string;
@@ -17,9 +18,10 @@ type Props = {
 };
 
 export default function Register({ passwordRules, teamInvitation }: Props) {
+    const { t } = useTranslation();
     return (
         <>
-            <Head title="Register" />
+            <Head title={t("Register")} />
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
@@ -37,7 +39,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
 
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <Label htmlFor="name">{t("Name")}</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -46,7 +48,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     tabIndex={1}
                                     autoComplete="name"
                                     name="name"
-                                    placeholder="Full name"
+                                    placeholder={t("Full name")}
                                 />
                                 <InputError
                                     message={errors.name}
@@ -55,7 +57,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">{t("Email address")}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -63,20 +65,20 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
-                                    placeholder="email@example.com"
+                                    placeholder={t("email@example.com")}
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">{t("Password")}</Label>
                                 <PasswordInput
                                     id="password"
                                     required
                                     tabIndex={3}
                                     autoComplete="new-password"
                                     name="password"
-                                    placeholder="Password"
+                                    placeholder={t("Password")}
                                     passwordrules={passwordRules}
                                 />
                                 <InputError message={errors.password} />
@@ -84,7 +86,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Confirm password
+                                    {t("Confirm password")}
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
@@ -92,7 +94,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password_confirmation"
-                                    placeholder="Confirm password"
+                                    placeholder={t("Confirm password")}
                                     passwordrules={passwordRules}
                                 />
                                 <InputError
@@ -107,12 +109,12 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
-                                Create account
+                                {t('Create account')}
                             </Button>
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
+                            {t('Already have an account?')}{' '}
                             <TextLink
                                 href={
                                     teamInvitation
@@ -127,7 +129,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 data-test="team-invitation-login-link"
                                 tabIndex={6}
                             >
-                                Log in
+                                {t("Log in")}
                             </TextLink>
                         </div>
                     </>

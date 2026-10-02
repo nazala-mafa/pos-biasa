@@ -21,6 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 
 export type DataTableColumn<T> = {
     id: string;
@@ -60,6 +61,7 @@ export default function DataTable<T>({
     rowTestId,
     searchPlaceholder = "Search...",
 }: DataTableProps<T>) {
+    const { t } = useTranslation();
     const [search, setSearch] = useState("");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
@@ -134,8 +136,8 @@ export default function DataTable<T>({
             <div className="flex flex-wrap items-end gap-3">
                 <Input
                     type="search"
-                    aria-label="Search"
-                    placeholder={searchPlaceholder}
+                    aria-label={t("Search")}
+                    placeholder={t(searchPlaceholder)}
                     value={search}
                     onChange={(event) => {
                         setSearch(event.target.value);
@@ -148,7 +150,7 @@ export default function DataTable<T>({
                     <div className="flex items-center gap-2">
                         <Input
                             type="date"
-                            aria-label={`${dateColumn.header} from`}
+                            aria-label={`${t(dateColumn.header)} ${t("from")}`}
                             value={dateFrom}
                             max={dateTo || undefined}
                             onChange={(event) => {
@@ -160,7 +162,7 @@ export default function DataTable<T>({
                         <span className="text-sm text-muted-foreground">–</span>
                         <Input
                             type="date"
-                            aria-label={`${dateColumn.header} to`}
+                            aria-label={`${t(dateColumn.header)} ${t("to")}`}
                             value={dateTo}
                             min={dateFrom || undefined}
                             onChange={(event) => {
@@ -176,12 +178,12 @@ export default function DataTable<T>({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
-                                <Columns3 /> Columns
+                                <Columns3 /> {t("Columns")}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>
-                                Toggle columns
+                                {t("Toggle columns")}
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {columns.map((column) => (
@@ -193,7 +195,7 @@ export default function DataTable<T>({
                                         toggleColumn(column.id, checked)
                                     }
                                 >
-                                    {column.header}
+                                    {t(column.header)}
                                 </DropdownMenuCheckboxItem>
                             ))}
                         </DropdownMenuContent>
@@ -210,7 +212,7 @@ export default function DataTable<T>({
                                     key={column.id}
                                     className={`p-3 font-medium ${column.className ?? ""}`}
                                 >
-                                    {column.header}
+                                    {t(column.header)}
                                 </th>
                             ))}
                         </tr>
@@ -222,7 +224,7 @@ export default function DataTable<T>({
                                     colSpan={Math.max(visibleColumns.length, 1)}
                                     className="p-6 text-center text-muted-foreground"
                                 >
-                                    No data found.
+                                    {t("No data found.")}
                                 </td>
                             </tr>
                         ) : (
@@ -249,7 +251,7 @@ export default function DataTable<T>({
 
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                 <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Rows per page</span>
+                    <span className="text-muted-foreground">{t("Rows per page")}</span>
                     <Select
                         value={String(limit)}
                         onValueChange={(value) => {
@@ -260,7 +262,7 @@ export default function DataTable<T>({
                         <SelectTrigger
                             size="sm"
                             className="w-20"
-                            aria-label="Rows per page"
+                            aria-label={t("Rows per page")}
                         >
                             <SelectValue />
                         </SelectTrigger>
@@ -277,17 +279,24 @@ export default function DataTable<T>({
                 <div className="flex items-center gap-3">
                     <span className="text-muted-foreground">
                         {filteredRows.length === 0
-                            ? "0 results"
-                            : `${offset + 1}–${offset + pageRows.length} of ${filteredRows.length}`}
+                            ? t("0 results")
+                            : t(":from–:to of :total", {
+                                  from: offset + 1,
+                                  to: offset + pageRows.length,
+                                  total: filteredRows.length,
+                              })}
                     </span>
                     <span className="text-muted-foreground">
-                        Page {currentPage} of {lastPage}
+                        {t("Page :current of :last", {
+                            current: currentPage,
+                            last: lastPage,
+                        })}
                     </span>
                     <div className="flex gap-1">
                         <Button
                             variant="outline"
                             size="sm"
-                            aria-label="Previous page"
+                            aria-label={t("Previous page")}
                             disabled={currentPage <= 1}
                             onClick={() => setPage(currentPage - 1)}
                         >
@@ -296,7 +305,7 @@ export default function DataTable<T>({
                         <Button
                             variant="outline"
                             size="sm"
-                            aria-label="Next page"
+                            aria-label={t("Next page")}
                             disabled={currentPage >= lastPage}
                             onClick={() => setPage(currentPage + 1)}
                         >

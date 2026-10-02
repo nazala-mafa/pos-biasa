@@ -1,27 +1,29 @@
 import { Head } from "@inertiajs/react";
 import Heading from "@/components/heading";
 import { dashboard } from "@/routes/admin";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     stats: { users: number; superadmins: number; roles: number; outlets: number };
 };
 
 export default function AdminDashboard({ stats }: Props) {
+    const { t } = useTranslation();
     const cards = [
-        { label: "Users", value: stats.users },
-        { label: "Superadmins", value: stats.superadmins },
-        { label: "Roles", value: stats.roles },
-        { label: "Outlets", value: stats.outlets },
+        { label: t("Users"), value: stats.users },
+        { label: t("Superadmins"), value: stats.superadmins },
+        { label: t("Roles"), value: stats.roles },
+        { label: t("Outlets"), value: stats.outlets },
     ];
 
     return (
         <>
-            <Head title="Admin" />
+            <Head title={t("Admin")} />
             <div className="flex flex-col space-y-6 p-4">
                 <Heading
                     variant="small"
-                    title="Admin panel"
-                    description="Overview of the whole system"
+                    title={t("Admin panel")}
+                    description={t("Overview of the whole system")}
                 />
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {cards.map((card) => (

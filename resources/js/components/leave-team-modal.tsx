@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/dialog';
 import { leave as leaveTeamAction } from '@/routes/teams';
 import type { Team } from '@/types';
+import { useTranslation } from '@/hooks/use-translation';
 
+import Trans from '@/components/trans';
 type Props = {
     team: Team | null;
     open: boolean;
@@ -20,6 +22,7 @@ type Props = {
 };
 
 export default function LeaveTeamModal({ team, open, onOpenChange }: Props) {
+    const { t } = useTranslation();
     const [processing, setProcessing] = useState(false);
 
     const leaveTeam = () => {
@@ -38,16 +41,18 @@ export default function LeaveTeamModal({ team, open, onOpenChange }: Props) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Leave team</DialogTitle>
+                    <DialogTitle>{t("Leave team")}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to leave{' '}
-                        <strong>{team?.name}</strong>?
+                        <Trans
+                            text="Are you sure you want to leave :name?"
+                            values={{ name: <strong>{team?.name}</strong> }}
+                        />
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Cancel</Button>
+                        <Button variant="secondary">{t("Cancel")}</Button>
                     </DialogClose>
 
                     <Button
@@ -56,7 +61,7 @@ export default function LeaveTeamModal({ team, open, onOpenChange }: Props) {
                         disabled={processing}
                         onClick={leaveTeam}
                     >
-                        Leave team
+                        {t("Leave team")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

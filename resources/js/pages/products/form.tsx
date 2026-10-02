@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { index, store, update } from "@/routes/products";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Option = { id: number; name: string };
 
@@ -38,6 +39,7 @@ export default function ProductsForm({
     units,
     taxes,
 }: Props) {
+    const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const [isActive, setIsActive] = useState(record?.isActive ?? true);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -63,8 +65,8 @@ export default function ProductsForm({
             {({ errors, processing }) => (
                 <FormLayout
                     size="lg"
-                    title={record ? "Edit product" : "New product"}
-                    description="Products"
+                    title={record ? t("Edit product") : t("New product")}
+                    description={t("Products")}
                     processing={processing}
                     cancelHref={index(team).url}
                     saveTestId="product-save-button"
@@ -77,7 +79,7 @@ export default function ProductsForm({
                                     setIsActive(checked === true)
                                 }
                             />
-                            <Label htmlFor="is_active_checkbox">Active</Label>
+                            <Label htmlFor="is_active_checkbox">{t("Active")}</Label>
                             <input
                                 type="hidden"
                                 name="is_active"
@@ -87,13 +89,13 @@ export default function ProductsForm({
                     }
                     sidebar={
                         <>
-                            <SidebarCard title="Photo">
+                            <SidebarCard title={t("Photo")}>
                                 <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-muted">
                                     {shownPhotoUrl ? (
                                         <img
                                             src={shownPhotoUrl}
                                             alt={
-                                                record?.name ?? "Product photo"
+                                                record?.name ?? t("Product photo")
                                             }
                                             className="h-full w-full object-cover"
                                         />
@@ -102,7 +104,7 @@ export default function ProductsForm({
                                     )}
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="photo">Upload photo</Label>
+                                    <Label htmlFor="photo">{t("Upload photo")}</Label>
                                     <Input
                                         id="photo"
                                         name="photo"
@@ -120,7 +122,7 @@ export default function ProductsForm({
                                         }}
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        JPG, PNG or WebP, max 2 MB.
+                                        {t("JPG, PNG or WebP, max 2 MB.")}
                                     </p>
                                     <InputError message={errors.photo} />
                                 </div>
@@ -134,7 +136,7 @@ export default function ProductsForm({
                                             }
                                         />
                                         <Label htmlFor="remove_photo_checkbox">
-                                            Remove current photo
+                                            {t("Remove current photo")}
                                         </Label>
                                         <input
                                             type="hidden"
@@ -144,10 +146,10 @@ export default function ProductsForm({
                                     </div>
                                 ) : null}
                             </SidebarCard>
-                            <SidebarCard title="Classification">
+                            <SidebarCard title={t("Classification")}>
                                 <div className="grid gap-2">
                                     <Label htmlFor="product_category_id">
-                                        Category
+                                        {t("Category")}
                                     </Label>
                                     <NativeSelect
                                         id="product_category_id"
@@ -169,7 +171,7 @@ export default function ProductsForm({
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="unit_id">Unit</Label>
+                                    <Label htmlFor="unit_id">{t("Unit")}</Label>
                                     <NativeSelect
                                         id="unit_id"
                                         name="unit_id"
@@ -189,7 +191,7 @@ export default function ProductsForm({
                                     <InputError message={errors.unit_id} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="tax_id">Tax</Label>
+                                    <Label htmlFor="tax_id">{t("Tax")}</Label>
                                     <NativeSelect
                                         id="tax_id"
                                         name="tax_id"
@@ -212,7 +214,7 @@ export default function ProductsForm({
                     }
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="sku">SKU</Label>
+                        <Label htmlFor="sku">{t("SKU")}</Label>
                         <Input
                             id="sku"
                             name="sku"
@@ -222,7 +224,7 @@ export default function ProductsForm({
                         <InputError message={errors.sku} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">{t("Name")}</Label>
                         <Input
                             id="name"
                             name="name"
@@ -232,7 +234,7 @@ export default function ProductsForm({
                         <InputError message={errors.name} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">{t("Description")}</Label>
                         <textarea
                             id="description"
                             name="description"
@@ -244,7 +246,7 @@ export default function ProductsForm({
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3">
                         <div className="grid gap-2">
-                            <Label htmlFor="cost_price">Cost price</Label>
+                            <Label htmlFor="cost_price">{t("Cost price")}</Label>
                             <Input
                                 id="cost_price"
                                 name="cost_price"
@@ -257,7 +259,7 @@ export default function ProductsForm({
                             <InputError message={errors.cost_price} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="selling_price">Selling price</Label>
+                            <Label htmlFor="selling_price">{t("Selling price")}</Label>
                             <Input
                                 id="selling_price"
                                 name="selling_price"
@@ -270,7 +272,7 @@ export default function ProductsForm({
                             <InputError message={errors.selling_price} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="min_stock">Minimum stock</Label>
+                            <Label htmlFor="min_stock">{t("Minimum stock")}</Label>
                             <Input
                                 id="min_stock"
                                 name="min_stock"

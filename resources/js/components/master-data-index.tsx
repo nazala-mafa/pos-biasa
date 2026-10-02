@@ -6,6 +6,7 @@ import type { DataTableColumn } from "@/components/data-table";
 import DeleteConfirmModal from "@/components/delete-confirm-modal";
 import type { PageSize } from "@/components/page-container";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 
 export type MasterDataRow = {
     id: number;
@@ -38,6 +39,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
     destroyUrl,
     size,
 }: Props<T>) {
+    const { t } = useTranslation();
     const { auth } = usePage().props;
     const [toDelete, setToDelete] = useState<T | null>(null);
 
@@ -47,20 +49,20 @@ export default function MasterDataIndex<T extends MasterDataRow>({
     const columns: DataTableColumn<T>[] = [
         {
             id: "name",
-            header: "Name",
+            header: t("Name"),
             searchValue: (row) => row.name,
             cell: (row) => <span className="font-medium">{row.name}</span>,
         },
         ...extraColumns,
         {
             id: "createdAt",
-            header: "Created",
+            header: t("Created"),
             dateValue: (row) => row.createdAt,
             cell: (row) => row.createdAt ?? "-",
         },
         {
             id: "actions",
-            header: "Actions",
+            header: t("Actions"),
             className: "text-right",
             cell: (row) => (
                 <div className="flex items-center justify-end gap-2">
@@ -68,7 +70,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
                         <Button variant="ghost" size="sm" asChild>
                             <Link
                                 href={editUrl(row.id)}
-                                aria-label={`Edit ${row.name}`}
+                                aria-label={`${t("Edit")} ${row.name}`}
                             >
                                 <Pencil className="h-4 w-4" />
                             </Link>
@@ -78,7 +80,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
                         <Button
                             variant="ghost"
                             size="sm"
-                            aria-label={`Delete ${row.name}`}
+                            aria-label={`${t("Delete")} ${row.name}`}
                             onClick={() => setToDelete(row)}
                         >
                             <Trash2 className="h-4 w-4" />
@@ -104,7 +106,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
                             data-test={`${permissionPrefix}-new-button`}
                         >
                             <Link href={createUrl}>
-                                <Plus /> New {itemLabel}
+                                <Plus /> {t("New :item", { item: t(itemLabel) })}
                             </Link>
                         </Button>
                     ) : null
@@ -113,11 +115,11 @@ export default function MasterDataIndex<T extends MasterDataRow>({
                 rows={rows}
                 rowKey={(row) => row.id}
                 rowTestId={`${permissionPrefix}-row`}
-                searchPlaceholder={`Search ${title.toLowerCase()}...`}
+                searchPlaceholder={t("Search :item...", { item: t(title).toLowerCase() })}
             />
 
             <DeleteConfirmModal
-                title={`Delete ${itemLabel}`}
+                title={t("Delete :item", { item: t(itemLabel) })}
                 name={toDelete?.name ?? null}
                 url={toDelete ? destroyUrl(toDelete.id) : null}
                 open={toDelete !== null}

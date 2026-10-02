@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dashboard } from "@/routes/admin";
 import outletRoutes, { index, store, update } from "@/routes/admin/outlets";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Props = {
     outlet: { slug: string; name: string; isDefault: boolean } | null;
 };
 
 function OutletDataCard({ slug }: { slug: string }) {
+    const { t } = useTranslation();
     const fileInput = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
 
@@ -40,9 +42,9 @@ function OutletDataCard({ slug }: { slug: string }) {
     };
 
     return (
-        <SidebarCard title="Data">
+        <SidebarCard title={t("Data")}>
             <p className="text-sm text-muted-foreground">
-                Export or import all outlet data. Every menu is its own sheet.
+                {t("Export or import all outlet data. Every menu is its own sheet.")}
             </p>
             <input
                 ref={fileInput}
@@ -54,7 +56,7 @@ function OutletDataCard({ slug }: { slug: string }) {
             />
             <Button variant="outline" className="w-full" asChild>
                 <a href={outletRoutes.template.url()}>
-                    <FileSpreadsheet /> Template
+                    <FileSpreadsheet /> {t("Template")}
                 </a>
             </Button>
             <Button
@@ -65,11 +67,11 @@ function OutletDataCard({ slug }: { slug: string }) {
                 onClick={() => fileInput.current?.click()}
                 data-test="outlet-import-button"
             >
-                <Upload /> Import
+                <Upload /> {t("Import")}
             </Button>
             <Button variant="outline" className="w-full" asChild>
                 <a href={outletRoutes.export.url(slug)}>
-                    <Download /> Export
+                    <Download /> {t("Export")}
                 </a>
             </Button>
         </SidebarCard>
@@ -77,6 +79,7 @@ function OutletDataCard({ slug }: { slug: string }) {
 }
 
 export default function OutletForm({ outlet }: Props) {
+    const { t } = useTranslation();
     const formAction = outlet ? update.form(outlet.slug) : store.form();
 
     return (
@@ -84,8 +87,8 @@ export default function OutletForm({ outlet }: Props) {
             {({ errors, processing }) => (
                 <FormLayout
                     size="sm"
-                    title={outlet ? "Edit outlet" : "New outlet"}
-                    description="Give the outlet a name"
+                    title={outlet ? t("Edit outlet") : t("New outlet")}
+                    description={t("Give the outlet a name")}
                     processing={processing || outlet?.isDefault === true}
                     cancelHref={index().url}
                     saveTestId="outlet-save-button"
@@ -94,7 +97,7 @@ export default function OutletForm({ outlet }: Props) {
                     }
                 >
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">{t("Name")}</Label>
                         <Input
                             id="name"
                             name="name"

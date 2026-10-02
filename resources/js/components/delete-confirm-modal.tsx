@@ -10,7 +10,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslation } from "@/hooks/use-translation";
 
+import Trans from '@/components/trans';
 type Props = {
     title: string;
     name: string | null;
@@ -26,6 +28,7 @@ export default function DeleteConfirmModal({
     open,
     onOpenChange,
 }: Props) {
+    const { t } = useTranslation();
     const [processing, setProcessing] = useState(false);
 
     const confirmDelete = () => {
@@ -45,16 +48,18 @@ export default function DeleteConfirmModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
+                    <DialogTitle>{t(title)}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to delete <strong>{name}</strong>?
-                        This action cannot be undone.
+                        <Trans
+                            text="Are you sure you want to delete :name? This action cannot be undone."
+                            values={{ name: <strong>{name}</strong> }}
+                        />
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
-                        <Button variant="secondary">Cancel</Button>
+                        <Button variant="secondary">{t("Cancel")}</Button>
                     </DialogClose>
 
                     <Button
@@ -63,7 +68,7 @@ export default function DeleteConfirmModal({
                         disabled={processing}
                         onClick={confirmDelete}
                     >
-                        Delete
+                        {t("Delete")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

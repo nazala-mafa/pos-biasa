@@ -81,7 +81,7 @@ trait HasTeams
      */
     public function switchTeam(Team $team): bool
     {
-        if (! $this->belongsToTeam($team)) {
+        if (! $this->is_superadmin && ! $this->belongsToTeam($team)) {
             return false;
         }
 

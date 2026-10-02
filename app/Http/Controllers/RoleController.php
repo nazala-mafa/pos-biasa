@@ -47,6 +47,7 @@ class RoleController extends Controller implements HasMiddleware
                     'usersCount' => $role->users_count,
                     'permissionsCount' => $role->permissions_count,
                     'isProtected' => $role->name === self::PROTECTED_ROLE,
+                    'createdAt' => $role->created_at?->toDateString(),
                 ]),
         ]);
     }
@@ -67,7 +68,7 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        $role = Role::create(['name' => $request->validated('name')]);
+        $role = Role::create(['name' => $request->validated('name'), 'team_id' => null]);
         $role->syncPermissions($request->validated('permissions', []));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created.')]);

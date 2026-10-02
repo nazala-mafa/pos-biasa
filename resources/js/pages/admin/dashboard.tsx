@@ -3,7 +3,7 @@ import Heading from "@/components/heading";
 import { dashboard } from "@/routes/admin";
 
 type Props = {
-    stats: { users: number; superadmins: number; roles: number; teams: number };
+    stats: { users: number; superadmins: number; roles: number; outlets: number };
 };
 
 export default function AdminDashboard({ stats }: Props) {
@@ -11,7 +11,7 @@ export default function AdminDashboard({ stats }: Props) {
         { label: "Users", value: stats.users },
         { label: "Superadmins", value: stats.superadmins },
         { label: "Roles", value: stats.roles },
-        { label: "Teams", value: stats.teams },
+        { label: "Outlets", value: stats.outlets },
     ];
 
     return (

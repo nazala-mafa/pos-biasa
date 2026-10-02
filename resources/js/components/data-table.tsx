@@ -1,0 +1,305 @@
+import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+export type DataTableColumn<T> = {
+    id: string;
+    header: string;
+    cell: (row: T) => ReactNode;
+    /** Plain-text value used by the search filter. */
+    searchValue?: (row: T) => string;
+    /** ISO date string; when any column defines it, a date range filter is shown. */
+    dateValue?: (row: T) => string | null;
+    hiddenByDefault?: boolean;
+    className?: string;
+};
+
+type DataTableProps<T> = {
+    title: string;
+    description?: string;
+    actions?: ReactNode;
+    columns: DataTableColumn<T>[];
+    rows: T[];
+    rowKey: (row: T) => string | number;
+    rowTestId?: string;
+    searchPlaceholder?: string;
+};
+
+const LIMIT_OPTIONS = [10, 25, 50, 100];
+
+export default function DataTable<T>({
+    title,
+    description,
+    actions,
+    columns,
+    rows,
+    rowKey,
+    rowTestId,
+    searchPlaceholder = "Search...",
+}: DataTableProps<T>) {
+    const [search, setSearch] = useState("");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+    const [limit, setLimit] = useState(LIMIT_OPTIONS[0]);
+    const [page, setPage] = useState(1);
+    const [hiddenColumns, setHiddenColumns] = useState<string[]>(
+        columns.filter((column) => column.hiddenByDefault).map((c) => c.id),
+    );
+
+    const dateColumn = columns.find((column) => column.dateValue);
+    const visibleColumns = columns.filter(
+        (column) => !hiddenColumns.includes(column.id),
+    );
+
+    const filteredRows = useMemo(() => {
+        const term = search.trim().toLowerCase();
+
+        return rows.filter((row) => {
+            if (term !== "") {
+                const haystack = columns
+                    .map((column) => column.searchValue?.(row) ?? "")
+                    .join(" ")
+                    .toLowerCase();
+
+                if (!haystack.includes(term)) {
+                    return false;
+                }
+            }
+
+            if (dateColumn?.dateValue && (dateFrom !== "" || dateTo !== "")) {
+                const date = dateColumn.dateValue(row)?.slice(0, 10);
+
+                if (!date) {
+                    return false;
+                }
+
+                if (dateFrom !== "" && date < dateFrom) {
+                    return false;
+                }
+
+                if (dateTo !== "" && date > dateTo) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [rows, columns, search, dateColumn, dateFrom, dateTo]);
+
+    const lastPage = Math.max(1, Math.ceil(filteredRows.length / limit));
+    const currentPage = Math.min(page, lastPage);
+    const offset = (currentPage - 1) * limit;
+    const pageRows = filteredRows.slice(offset, offset + limit);
+
+    const toggleColumn = (id: string, visible: boolean) => {
+        setHiddenColumns((current) =>
+            visible ? current.filter((c) => c !== id) : [...current, id],
+        );
+    };
+
+    return (
+        <div className="flex flex-col space-y-6 p-4">
+            <div className="flex items-center justify-between gap-4">
+                <Heading
+                    variant="small"
+                    title={title}
+                    description={description}
+                />
+                {actions}
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3">
+                <Input
+                    type="search"
+                    aria-label="Search"
+                    placeholder={searchPlaceholder}
+                    value={search}
+                    onChange={(event) => {
+                        setSearch(event.target.value);
+                        setPage(1);
+                    }}
+                    className="w-full sm:w-64"
+                />
+
+                {dateColumn ? (
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            aria-label={`${dateColumn.header} from`}
+                            value={dateFrom}
+                            max={dateTo || undefined}
+                            onChange={(event) => {
+                                setDateFrom(event.target.value);
+                                setPage(1);
+                            }}
+                            className="w-auto"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                            –
+                        </span>
+                        <Input
+                            type="date"
+                            aria-label={`${dateColumn.header} to`}
+                            value={dateTo}
+                            min={dateFrom || undefined}
+                            onChange={(event) => {
+                                setDateTo(event.target.value);
+                                setPage(1);
+                            }}
+                            className="w-auto"
+                        />
+                    </div>
+                ) : null}
+
+                <div className="ml-auto">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Columns3 /> Columns
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {columns.map((column) => (
+                                <DropdownMenuCheckboxItem
+                                    key={column.id}
+                                    checked={!hiddenColumns.includes(column.id)}
+                                    onSelect={(event) => event.preventDefault()}
+                                    onCheckedChange={(checked) =>
+                                        toggleColumn(column.id, checked)
+                                    }
+                                >
+                                    {column.header}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-left">
+                        <tr>
+                            {visibleColumns.map((column) => (
+                                <th
+                                    key={column.id}
+                                    className={`p-3 font-medium ${column.className ?? ""}`}
+                                >
+                                    {column.header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pageRows.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={Math.max(visibleColumns.length, 1)}
+                                    className="p-6 text-center text-muted-foreground"
+                                >
+                                    No data found.
+                                </td>
+                            </tr>
+                        ) : (
+                            pageRows.map((row) => (
+                                <tr
+                                    key={rowKey(row)}
+                                    data-test={rowTestId}
+                                    className="border-t"
+                                >
+                                    {visibleColumns.map((column) => (
+                                        <td
+                                            key={column.id}
+                                            className={`p-3 ${column.className ?? ""}`}
+                                        >
+                                            {column.cell(row)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Rows per page</span>
+                    <Select
+                        value={String(limit)}
+                        onValueChange={(value) => {
+                            setLimit(Number(value));
+                            setPage(1);
+                        }}
+                    >
+                        <SelectTrigger
+                            size="sm"
+                            className="w-20"
+                            aria-label="Rows per page"
+                        >
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {LIMIT_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={String(option)}>
+                                    {option}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground">
+                        {filteredRows.length === 0
+                            ? "0 results"
+                            : `${offset + 1}–${offset + pageRows.length} of ${filteredRows.length}`}
+                    </span>
+                    <span className="text-muted-foreground">
+                        Page {currentPage} of {lastPage}
+                    </span>
+                    <div className="flex gap-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            aria-label="Previous page"
+                            disabled={currentPage <= 1}
+                            onClick={() => setPage(currentPage - 1)}
+                        >
+                            <ChevronLeft />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            aria-label="Next page"
+                            disabled={currentPage >= lastPage}
+                            onClick={() => setPage(currentPage + 1)}
+                        >
+                            <ChevronRight />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

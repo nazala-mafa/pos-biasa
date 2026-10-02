@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react";
-import { ArrowLeft, LayoutGrid, Store } from "lucide-react";
+import { ArrowLeft, LayoutGrid, Store, Users } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -13,12 +13,14 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { dashboard as adminDashboard } from "@/routes/admin";
-import { index as teamsIndex } from "@/routes/admin/teams";
+import { index as outletsIndex } from "@/routes/admin/outlets";
+import { index as usersIndex } from "@/routes/admin/users";
 import type { NavItem } from "@/types";
 
 const adminNavItems: NavItem[] = [
     { title: "Dashboard", href: adminDashboard(), icon: LayoutGrid },
-    { title: "Teams", href: teamsIndex(), icon: Store },
+    { title: "Outlets", href: outletsIndex(), icon: Store },
+    { title: "Users", href: usersIndex(), icon: Users },
 ];
 
 export function AdminSidebar() {

@@ -37,6 +37,7 @@ class RolesAndPermissionsSeeder extends Seeder
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        app(PermissionRegistrar::class)->setPermissionsTeamId(null);
 
         $allPermissions = collect(self::ROLE_PERMISSIONS)->flatten()->unique();
 

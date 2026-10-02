@@ -18,7 +18,7 @@ class DashboardController extends Controller
                 'users' => User::count(),
                 'superadmins' => User::where('is_superadmin', true)->count(),
                 'roles' => Role::count(),
-                'teams' => Team::count(),
+                'outlets' => Team::where('is_personal', false)->count(),
             ],
         ]);
     }

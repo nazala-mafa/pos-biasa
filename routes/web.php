@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\TeamController as AdminTeamController;
+use App\Http\Controllers\Admin\OutletController as AdminOutletController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -16,7 +17,8 @@ Route::middleware(['auth', 'verified', 'superadmin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
-        Route::get('teams', [AdminTeamController::class, 'index'])->name('teams.index');
+        Route::resource('outlets', AdminOutletController::class)->except('show');
+        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
     });
 
 Route::prefix('{current_team}')

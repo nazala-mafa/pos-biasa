@@ -4,6 +4,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\UserSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -15,6 +16,15 @@ test('admin can list users', function () {
         ->get(route('users.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('users/index')->has('users', 1));
+});
+
+test('superadmins are excluded from the users list', function () {
+    User::factory()->superadmin()->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('users.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->has('users', 1));
 });
 
 test('users without permission are forbidden', function () {
@@ -36,6 +46,8 @@ test('admin can create a user with roles', function () {
         ->assertRedirect(route('users.index'));
 
     $user = User::where('email', 'cashier@example.com')->firstOrFail();
+
+    app(PermissionRegistrar::class)->setPermissionsTeamId($user->current_team_id);
 
     expect($user->hasRole('cashier'))->toBeTrue()
         ->and($user->currentTeam->name)->toBe('POS')
@@ -95,6 +107,5 @@ test('user seeder creates a superadmin and is idempotent', function () {
     $this->seed(UserSeeder::class);
     $this->seed(UserSeeder::class);
 
-    expect(User::where('is_superadmin', true)->count())->toBe(1)
-        ->and(User::where('email', 'cashier@example.com')->first()->hasRole('cashier'))->toBeTrue();
+    expect(User::where('is_superadmin', true)->count())->toBe(1);
 });

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller implements HasMiddleware
 {
@@ -38,6 +39,7 @@ class UserController extends Controller implements HasMiddleware
     {
         return Inertia::render('users/index', [
             'users' => User::query()
+                ->where('is_superadmin', false)
                 ->with('roles:id,name')
                 ->orderBy('name')
                 ->get()
@@ -46,6 +48,7 @@ class UserController extends Controller implements HasMiddleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'roles' => $user->roles->pluck('name'),
+                    'createdAt' => $user->created_at?->toDateString(),
                 ]),
         ]);
     }
@@ -70,8 +73,13 @@ class UserController extends Controller implements HasMiddleware
             $user = User::create($request->safe()->only(['name', 'email', 'password']));
             $user->forceFill(['email_verified_at' => now()])->save();
 
-            $assignDefaultTeam->handle($user);
+            $outlet = $assignDefaultTeam->handle($user);
+
+            $registrar = app(PermissionRegistrar::class);
+            $previousTeamId = $registrar->getPermissionsTeamId();
+            $registrar->setPermissionsTeamId($outlet->id);
             $user->syncRoles($request->validated('roles', []));
+            $registrar->setPermissionsTeamId($previousTeamId);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User created.')]);

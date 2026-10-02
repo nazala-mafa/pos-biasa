@@ -22,6 +22,7 @@ export default function PricesIndex({ rows }: { rows: Row[] }) {
 
     return (
         <MasterDataIndex
+            size="md"
             title="Prices"
             description="Price levels such as retail or wholesale"
             itemLabel="price"

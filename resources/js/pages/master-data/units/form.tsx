@@ -17,6 +17,7 @@ export default function UnitsForm({
 
     return (
         <MasterDataForm
+            size="sm"
             title="Units"
             itemLabel="unit"
             record={record}

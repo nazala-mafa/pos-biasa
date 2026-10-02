@@ -22,6 +22,7 @@ export default function UnitsIndex({ rows }: { rows: Row[] }) {
 
     return (
         <MasterDataIndex
+            size="sm"
             title="Units"
             description="Units of measure used by products"
             itemLabel="unit"

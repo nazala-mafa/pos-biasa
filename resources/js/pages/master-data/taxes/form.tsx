@@ -17,6 +17,7 @@ export default function TaxesForm({
 
     return (
         <MasterDataForm
+            size="sm"
             title="Taxes"
             itemLabel="tax"
             record={record}

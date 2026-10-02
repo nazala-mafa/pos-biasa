@@ -22,6 +22,7 @@ export default function ProductCategoriesIndex({ rows }: { rows: Row[] }) {
 
     return (
         <MasterDataIndex
+            size="md"
             title="Product Categories"
             description="Group your products into categories"
             itemLabel="category"

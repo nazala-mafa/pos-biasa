@@ -22,6 +22,7 @@ export default function PricesForm({
 
     return (
         <MasterDataForm
+            size="md"
             title="Prices"
             itemLabel="price"
             record={record}

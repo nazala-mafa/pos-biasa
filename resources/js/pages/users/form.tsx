@@ -1,9 +1,8 @@
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
-import { Form, Head, Link } from "@inertiajs/react";
+import { Form } from "@inertiajs/react";
 import { useState } from "react";
-import Heading from "@/components/heading";
+import FormLayout, { SidebarCard } from "@/components/form-layout";
 import InputError from "@/components/input-error";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,74 +27,18 @@ export default function UserForm({ user, roles }: Props) {
     };
 
     return (
-        <>
-            <Head title={user ? `Edit ${user.name}` : "New user"} />
-
-            <div className="max-w-2xl space-y-6 p-4">
-                <Heading
-                    variant="small"
+        <Form {...formAction}>
+            {({ errors, processing }) => (
+                <FormLayout
+                    size="md"
                     title={user ? "Edit user" : "New user"}
                     description="Set account details and assign roles"
-                />
-
-                <Form {...formAction} className="space-y-6">
-                    {({ errors, processing }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    defaultValue={user?.name}
-                                    required
-                                />
-                                <InputError message={errors.name} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    defaultValue={user?.email}
-                                    required
-                                />
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">
-                                    Password
-                                    {user
-                                        ? " (leave blank to keep current)"
-                                        : ""}
-                                </Label>
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    required={!user}
-                                />
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-                                <Input
-                                    id="password_confirmation"
-                                    name="password_confirmation"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    required={!user}
-                                />
-                            </div>
-
+                    processing={processing}
+                    cancelHref={index(team).url}
+                    saveTestId="user-save-button"
+                    sidebar={
+                        <SidebarCard title="Roles">
                             <div className="grid gap-3">
-                                <Label>Roles</Label>
                                 {roles.map((role) => (
                                     <div
                                         key={role}
@@ -128,24 +71,62 @@ export default function UserForm({ user, roles }: Props) {
                                 ))}
                                 <InputError message={errors.roles} />
                             </div>
+                        </SidebarCard>
+                    }
+                >
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                            id="name"
+                            name="name"
+                            defaultValue={user?.name}
+                            required
+                        />
+                        <InputError message={errors.name} />
+                    </div>
 
-                            <div className="flex items-center gap-4">
-                                <Button
-                                    type="submit"
-                                    data-test="user-save-button"
-                                    disabled={processing}
-                                >
-                                    Save
-                                </Button>
-                                <Button variant="secondary" asChild>
-                                    <Link href={index(team)}>Cancel</Link>
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-        </>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            defaultValue={user?.email}
+                            required
+                        />
+                        <InputError message={errors.email} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="password">
+                            Password
+                            {user ? " (leave blank to keep current)" : ""}
+                        </Label>
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autoComplete="new-password"
+                            required={!user}
+                        />
+                        <InputError message={errors.password} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="password_confirmation">
+                            Confirm password
+                        </Label>
+                        <Input
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            type="password"
+                            autoComplete="new-password"
+                            required={!user}
+                        />
+                    </div>
+                </FormLayout>
+            )}
+        </Form>
     );
 }
 

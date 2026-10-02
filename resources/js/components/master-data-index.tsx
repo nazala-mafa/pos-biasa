@@ -4,6 +4,7 @@ import { useState } from "react";
 import DataTable from "@/components/data-table";
 import type { DataTableColumn } from "@/components/data-table";
 import DeleteConfirmModal from "@/components/delete-confirm-modal";
+import type { PageSize } from "@/components/page-container";
 import { Button } from "@/components/ui/button";
 
 export type MasterDataRow = {
@@ -22,6 +23,7 @@ type Props<T extends MasterDataRow> = {
     createUrl: string;
     editUrl: (id: number) => string;
     destroyUrl: (id: number) => string;
+    size?: PageSize;
 };
 
 export default function MasterDataIndex<T extends MasterDataRow>({
@@ -34,6 +36,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
     createUrl,
     editUrl,
     destroyUrl,
+    size,
 }: Props<T>) {
     const { auth } = usePage().props;
     const [toDelete, setToDelete] = useState<T | null>(null);
@@ -91,6 +94,7 @@ export default function MasterDataIndex<T extends MasterDataRow>({
             <Head title={title} />
 
             <DataTable
+                size={size}
                 title={title}
                 description={description}
                 actions={

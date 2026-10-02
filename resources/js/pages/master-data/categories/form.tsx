@@ -22,6 +22,7 @@ export default function ProductCategoriesForm({
 
     return (
         <MasterDataForm
+            size="md"
             title="Product Categories"
             itemLabel="category"
             record={record}

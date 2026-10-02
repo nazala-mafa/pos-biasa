@@ -22,6 +22,7 @@ export default function TaxesIndex({ rows }: { rows: Row[] }) {
 
     return (
         <MasterDataIndex
+            size="sm"
             title="Taxes"
             description="Tax rates applied to sales"
             itemLabel="tax"

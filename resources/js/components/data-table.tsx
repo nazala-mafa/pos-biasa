@@ -2,6 +2,8 @@ import { ChevronLeft, ChevronRight, Columns3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Heading from "@/components/heading";
+import PageContainer from "@/components/page-container";
+import type { PageSize } from "@/components/page-container";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -36,6 +38,8 @@ type DataTableProps<T> = {
     title: string;
     description?: string;
     actions?: ReactNode;
+    /** Max width: sm (little data), md (medium), lg (a lot). Defaults to lg. */
+    size?: PageSize;
     columns: DataTableColumn<T>[];
     rows: T[];
     rowKey: (row: T) => string | number;
@@ -49,6 +53,7 @@ export default function DataTable<T>({
     title,
     description,
     actions,
+    size = "lg",
     columns,
     rows,
     rowKey,
@@ -116,7 +121,7 @@ export default function DataTable<T>({
     };
 
     return (
-        <div className="flex flex-col space-y-6 p-4">
+        <PageContainer size={size} className="flex flex-col space-y-6 p-4">
             <div className="flex items-center justify-between gap-4">
                 <Heading
                     variant="small"
@@ -152,9 +157,7 @@ export default function DataTable<T>({
                             }}
                             className="w-auto"
                         />
-                        <span className="text-sm text-muted-foreground">
-                            –
-                        </span>
+                        <span className="text-sm text-muted-foreground">–</span>
                         <Input
                             type="date"
                             aria-label={`${dateColumn.header} to`}
@@ -177,7 +180,9 @@ export default function DataTable<T>({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                            <DropdownMenuLabel>
+                                Toggle columns
+                            </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {columns.map((column) => (
                                 <DropdownMenuCheckboxItem
@@ -300,6 +305,6 @@ export default function DataTable<T>({
                     </div>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 }

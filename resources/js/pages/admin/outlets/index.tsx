@@ -92,6 +92,7 @@ export default function OutletsIndex({ outlets }: { outlets: OutletRow[] }) {
             <Head title="Outlets" />
 
             <DataTable
+                size="sm"
                 title="Outlets"
                 description="Manage your outlets (branches)"
                 actions={

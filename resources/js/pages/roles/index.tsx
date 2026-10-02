@@ -92,6 +92,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
             <Head title="Roles" />
 
             <DataTable
+                size="sm"
                 title="Roles"
                 description="Manage roles and the permissions they grant"
                 actions={

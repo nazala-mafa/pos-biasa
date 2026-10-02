@@ -60,6 +60,7 @@ export default function AdminUsersIndex({ users }: { users: UserRow[] }) {
         <>
             <Head title="Users" />
             <DataTable
+                size="lg"
                 title="Users"
                 description="All users with their outlet and role"
                 columns={columns}

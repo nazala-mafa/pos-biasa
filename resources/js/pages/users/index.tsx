@@ -93,6 +93,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
             <Head title="Users" />
 
             <DataTable
+                size="md"
                 title="Users"
                 description="Manage user accounts and their roles"
                 actions={

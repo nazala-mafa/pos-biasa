@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from "@inertiajs/react";
-import { History, Plus } from "lucide-react";
+import { ArrowLeftRight, History, Plus } from "lucide-react";
 import DataTable from "@/components/data-table";
 import type { DataTableColumn } from "@/components/data-table";
 import { T } from "@/components/trans";
@@ -72,6 +72,34 @@ export default function InventoryIndex({ rows }: { rows: Row[] }) {
     const { t } = useTranslation();
     const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
+    const canAdjust = auth.permissions.includes("inventory.adjust");
+
+    const tableColumns: DataTableColumn<Row>[] = canAdjust
+        ? [
+              ...columns,
+              {
+                  id: "actions",
+                  header: t("Actions"),
+                  className: "text-right",
+                  cell: (row) => (
+                      <div className="flex justify-end">
+                          <Button variant="ghost" size="sm" asChild>
+                              <Link
+                                  href={create(team, {
+                                      query: { product_id: row.id },
+                                  }).url}
+                                  aria-label={`${t("New stock movement")} ${row.sku}`}
+                                  title={t("New stock movement")}
+                                  data-test="inventory-row-movement-button"
+                              >
+                                  <ArrowLeftRight className="h-4 w-4" />
+                              </Link>
+                          </Button>
+                      </div>
+                  ),
+              },
+          ]
+        : columns;
 
     return (
         <>
@@ -86,7 +114,7 @@ export default function InventoryIndex({ rows }: { rows: Row[] }) {
                                 <History /> {t("History")}
                             </Link>
                         </Button>
-                        {auth.permissions.includes("inventory.adjust") ? (
+                        {canAdjust ? (
                             <Button asChild data-test="inventory-new-button">
                                 <Link href={create(team).url}>
                                     <Plus /> {t("New stock movement")}
@@ -95,7 +123,7 @@ export default function InventoryIndex({ rows }: { rows: Row[] }) {
                         ) : null}
                     </div>
                 }
-                columns={columns}
+                columns={tableColumns}
                 rows={rows}
                 rowKey={(row) => row.id}
                 rowTestId="inventory-row"

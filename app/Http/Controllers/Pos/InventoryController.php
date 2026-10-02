@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Pos;
 
-use App\Http\Controllers\Controller;
-
 use App\Enums\StockMovementType;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreStockMovementRequest;
 use App\Models\Product;
 use App\Models\StockMovement;
@@ -89,6 +88,7 @@ class InventoryController extends Controller
             'suppliers' => $this->suppliers->all($outlet)->map->only(['id', 'name'])->values(),
             'types' => collect(StockMovementType::cases())
                 ->map(fn (StockMovementType $type) => ['value' => $type->value, 'label' => $type->label()]),
+            'selectedProductId' => $request->integer('product_id') ?: null,
         ]);
     }
 

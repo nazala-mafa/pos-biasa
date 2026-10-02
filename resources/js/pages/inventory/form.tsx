@@ -19,12 +19,18 @@ type Props = {
     }[];
     suppliers: { id: number; name: string }[];
     types: { value: string; label: string }[];
+    selectedProductId: number | null;
 };
 
-export default function InventoryForm({ products, suppliers, types }: Props) {
+export default function InventoryForm({
+    products,
+    suppliers,
+    types,
+    selectedProductId,
+}: Props) {
     const { t } = useTranslation();
     const team = useCurrentTeamSlug();
-    const [productId, setProductId] = useState("");
+    const [productId, setProductId] = useState(selectedProductId ? String(selectedProductId) : "");
     const [type, setType] = useState("in");
     const product = products.find((item) => String(item.id) === productId);
 

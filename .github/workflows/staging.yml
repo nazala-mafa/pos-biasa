@@ -3,11 +3,11 @@ name: Build and Deploy to Staging
 on:
   push:
     branches:
-      - master
+      - main
       - staging
   pull_request:
     branches:
-      - master
+      - main
       - staging
 
 env:
@@ -58,12 +58,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           # Must match APP_NAME in the runtime env file, otherwise the client
           # bundle appends a second app name to every page title.
           build-args: |
-            APP_NAME=Bengkel POS
+            APP_NAME=POS Biasa
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -71,6 +71,7 @@ jobs:
     name: Deploy ke VPS
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name != 'pull_request'
 
     steps:
       - name: Deploy via SSH

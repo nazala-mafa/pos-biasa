@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: pos-app
+    env_file:
+      - .env
+    environment:
+      SERVER_NAME: ":8080"
+    volumes:
+      - ./storage:/var/www/html/storage
+    ports:
+      - "8080:8080"

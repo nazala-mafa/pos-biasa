@@ -118,3 +118,26 @@ test('purchase orders are scoped to the outlet and protected by permissions', fu
     $this->actingAs($cashier)->get(route('purchases.index'))->assertForbidden();
     $this->actingAs($cashier)->post(route('purchases.store'), [])->assertForbidden();
 });
+
+test('an order with several items becomes received once every item is fully received', function () {
+    $order = orderedPurchase($this, 5);
+    $second = PurchaseOrderItem::factory()->create(['purchase_order_id' => $order->id, 'product_id' => Product::factory()->create(['team_id' => $this->outletId])->id, 'quantity' => 2.5, 'unit_cost' => 1000, 'subtotal' => 2500]);
+    $first = $order->items->first();
+
+    $this->actingAs($this->admin)->post(route('purchases.receive', $order->id), [
+        'received_at' => now()->toDateString(),
+        'items' => [
+            ['purchase_order_item_id' => $first->id, 'quantity' => 5],
+            ['purchase_order_item_id' => $second->id, 'quantity' => 0],
+        ],
+    ]);
+
+    expect($order->fresh()->status)->toBe(PurchaseOrderStatus::Partial);
+
+    $this->actingAs($this->admin)->post(route('purchases.receive', $order->id), [
+        'received_at' => now()->toDateString(),
+        'items' => [['purchase_order_item_id' => $second->id, 'quantity' => 2.5]],
+    ]);
+
+    expect($order->fresh()->status)->toBe(PurchaseOrderStatus::Received);
+});

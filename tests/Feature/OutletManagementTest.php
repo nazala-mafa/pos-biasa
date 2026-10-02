@@ -186,6 +186,42 @@ test('outlet import requires a spreadsheet file and a superadmin', function () {
 test('the master data seeder imports the bundled workbook into the pos outlet', function () {
     $this->seed(MasterDataSeeder::class);
 
-    expect($this->defaultOutlet->productCategories()->pluck('name')->all())->toEqualCanonicalizing(['Food', 'Beverage', 'Other'])
-        ->and($this->defaultOutlet->taxes()->sole()->name)->toBe('PPN');
+    $outlet = $this->defaultOutlet;
+
+    expect($outlet->productCategories()->count())->toBe(6)
+        ->and($outlet->taxes()->pluck('name')->all())->toEqualCanonicalizing(['PPN', 'Bebas Pajak'])
+        ->and($outlet->paymentMethods()->count())->toBe(6)
+        ->and($outlet->products()->count())->toBe(32)
+        ->and($outlet->suppliers()->count())->toBe(5)
+        ->and($outlet->customers()->count())->toBe(12)
+        ->and($outlet->purchaseOrders()->count())->toBe(14)
+        ->and($outlet->goodsReceipts()->count())->toBe(11)
+        ->and($outlet->sales()->count())->toBe(299)
+        ->and($outlet->saleReturns()->count())->toBe(5)
+        ->and($outlet->stockOpnames()->count())->toBe(2);
+
+    $sale = $outlet->sales()->with('items')->orderBy('invoice_number')->first();
+
+    expect($sale->created_at->format('Y-m'))->toBe('2026-09')
+        ->and((float) $sale->total)->toBe(round((float) $sale->items->sum('subtotal') + (float) $sale->items->sum('tax_amount') - (float) $sale->discount, 2))
+        ->and((float) $sale->paid)->toBeGreaterThanOrEqual((float) $sale->total)
+        ->and($outlet->stockMovements()->whereHas('product')->sum('quantity'))->toBeGreaterThan(0)
+        ->and($outlet->products()->withSum('stockMovements as stock', 'quantity')->get()->every(fn ($product) => (float) $product->stock >= 0))->toBeTrue();
+});
+
+test('exporting then importing carries transactions and keeps the totals consistent', function () {
+    $this->seed(MasterDataSeeder::class);
+
+    $path = tempnam(sys_get_temp_dir(), 'outlet').'.xlsx';
+    file_put_contents($path, Excel::raw(new OutletDataExport($this->defaultOutlet), ExcelType::XLSX));
+
+    $target = Team::factory()->create();
+    $import = app(ImportOutletData::class)->handle($target, $path);
+
+    expect($import->failures)->toBe([])
+        ->and($target->sales()->count())->toBe(299)
+        ->and((float) $target->sales()->sum('total'))->toBe((float) $this->defaultOutlet->sales()->sum('total'))
+        ->and((float) $target->purchaseOrders()->sum('total'))->toBe((float) $this->defaultOutlet->purchaseOrders()->sum('total'))
+        ->and((float) $target->saleReturns()->sum('total'))->toBe((float) $this->defaultOutlet->saleReturns()->sum('total'))
+        ->and($target->stockMovements()->count())->toBe($this->defaultOutlet->stockMovements()->count());
 });

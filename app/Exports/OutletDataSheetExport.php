@@ -5,9 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class OutletDataSheetExport implements FromArray, ShouldAutoSize, WithHeadings, WithTitle
+class OutletDataSheetExport implements FromArray, ShouldAutoSize, WithHeadings, WithStrictNullComparison, WithTitle
 {
     /**
      * @param  array<int, string>  $headings

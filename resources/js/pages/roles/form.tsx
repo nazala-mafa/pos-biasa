@@ -33,6 +33,23 @@ export default function RoleForm({ role, permissions }: Props) {
         );
     };
 
+    const toggleMany = (items: string[], checked: boolean) => {
+        setSelected((current) => [
+            ...current.filter((p) => !items.includes(p)),
+            ...(checked ? items : []),
+        ]);
+    };
+
+    const selectionState = (items: string[]): boolean | "indeterminate" => {
+        const count = items.filter((p) => selected.includes(p)).length;
+
+        if (count === 0) {
+            return false;
+        }
+
+        return count === items.length ? true : "indeterminate";
+    };
+
     return (
         <Form {...formAction}>
             {({ errors, processing }) => (
@@ -59,16 +76,52 @@ export default function RoleForm({ role, permissions }: Props) {
                         <Label>{t("Permissions")}</Label>
                         {permissions.map(({ group, menus }) => (
                             <div key={group} className="space-y-3">
-                                <div className="text-sm font-semibold">
-                                    {t(group)}
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id={`group-${group}`}
+                                        aria-label={`${t("Select all")} ${t(group)}`}
+                                        checked={selectionState(
+                                            menus.flatMap((m) => m.permissions),
+                                        )}
+                                        onCheckedChange={(checked) =>
+                                            toggleMany(
+                                                menus.flatMap(
+                                                    (m) => m.permissions,
+                                                ),
+                                                checked === true,
+                                            )
+                                        }
+                                    />
+                                    <Label
+                                        htmlFor={`group-${group}`}
+                                        className="font-semibold"
+                                    >
+                                        {t(group)}
+                                    </Label>
                                 </div>
                                 {menus.map(({ menu, permissions: items }) => (
                                     <div
                                         key={menu}
                                         className="space-y-2 rounded-lg border p-4"
                                     >
-                                        <div className="text-sm font-medium capitalize">
-                                            {t(menu)}
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`menu-${group}-${menu}`}
+                                                aria-label={`${t("Select all")} ${t(menu)}`}
+                                                checked={selectionState(items)}
+                                                onCheckedChange={(checked) =>
+                                                    toggleMany(
+                                                        items,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                            <Label
+                                                htmlFor={`menu-${group}-${menu}`}
+                                                className="font-medium capitalize"
+                                            >
+                                                {t(menu)}
+                                            </Label>
                                         </div>
                                         <div className="grid gap-2 sm:grid-cols-2">
                                             {items.map((permission) => (

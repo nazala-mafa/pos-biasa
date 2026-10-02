@@ -266,7 +266,7 @@ export default function DataTable<T>({
                         >
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent side="top" avoidCollisions className="min-h-40">
                             {LIMIT_OPTIONS.map((option) => (
                                 <SelectItem key={option} value={String(option)}>
                                     {option}

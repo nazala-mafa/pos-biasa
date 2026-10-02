@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 export type MasterDataField = {
     name: string;
     label: string;
-    type?: "text" | "number" | "textarea";
+    type?: "text" | "number" | "email" | "textarea";
     step?: string;
     required?: boolean;
 };

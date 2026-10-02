@@ -1,11 +1,15 @@
 import { Link, usePage } from "@inertiajs/react";
 import {
     BookOpen,
+    Boxes,
     Database,
     FolderGit2,
     LayoutGrid,
+    Package,
     Settings,
     ShieldCheck,
+    Truck,
+    UserRound,
     Users,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
@@ -24,6 +28,10 @@ import {
 } from "@/components/ui/sidebar";
 import { dashboard } from "@/routes";
 import { dashboard as adminDashboard } from "@/routes/admin";
+import { index as customersIndex } from "@/routes/customers";
+import { index as inventoryIndex } from "@/routes/inventory";
+import { index as productsIndex } from "@/routes/products";
+import { index as suppliersIndex } from "@/routes/suppliers";
 import { index as categoriesIndex } from "@/routes/master-data/categories";
 import { index as pricesIndex } from "@/routes/master-data/prices";
 import { index as taxesIndex } from "@/routes/master-data/taxes";
@@ -54,6 +62,14 @@ export function AppSidebar() {
         .filter((item) => permissions.includes(item.permission))
         .map(({ permission: _permission, ...item }) => item);
 
+    const navItem = (
+        permission: string,
+        title: string,
+        href: NavItem["href"],
+        icon: NavItem["icon"],
+    ): NavItem[] =>
+        permissions.includes(permission) ? [{ title, href, icon }] : [];
+
     const mainNavItems: NavItem[] = [
         {
             title: "Dashboard",
@@ -73,6 +89,25 @@ export function AppSidebar() {
                   },
               ]
             : []),
+        ...navItem(
+            "products.view",
+            "Produk / Barang",
+            productsIndex(team),
+            Package,
+        ),
+        ...navItem(
+            "customers.view",
+            "Pelanggan",
+            customersIndex(team),
+            UserRound,
+        ),
+        ...navItem("suppliers.view", "Supplier", suppliersIndex(team), Truck),
+        ...navItem(
+            "inventory.view",
+            "Stok / Inventory",
+            inventoryIndex(team),
+            Boxes,
+        ),
         ...(permissions.includes("users.view")
             ? [{ title: "Users", href: usersIndex(team), icon: Users }]
             : []),

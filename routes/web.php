@@ -3,12 +3,16 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OutletController as AdminOutletController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MasterData\PriceController;
 use App\Http\Controllers\MasterData\ProductCategoryController;
 use App\Http\Controllers\MasterData\TaxController;
 use App\Http\Controllers\MasterData\UnitController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureTeamMembership;
@@ -29,6 +33,20 @@ Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::resource('products', ProductController::class)->except('show');
+        Route::resource('customers', CustomerController::class)->except('show');
+        Route::resource('suppliers', SupplierController::class)->except('show');
+
+        Route::prefix('inventory')
+            ->name('inventory.')
+            ->controller(InventoryController::class)
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('movements', 'movements')->name('movements');
+                Route::get('create', 'create')->name('create');
+                Route::post('/', 'store')->name('store');
+            });
 
         Route::prefix('management')->group(function () {
             Route::resource('users', UserController::class)->except('show');

@@ -23,15 +23,20 @@ class RolesAndPermissionsSeeder extends Seeder
             'units.create', 'units.update', 'units.delete',
             'prices.create', 'prices.update', 'prices.delete',
             'taxes.create', 'taxes.update', 'taxes.delete',
+            'customers.delete', 'suppliers.delete',
         ],
         'manager' => [
             'products.view', 'products.create', 'products.update', 'products.delete',
+            'customers.view', 'customers.create', 'customers.update',
+            'suppliers.view', 'suppliers.create', 'suppliers.update',
+            'inventory.view', 'inventory.adjust',
             'sales.view', 'sales.create', 'sales.refund',
             'reports.view',
             'categories.view', 'units.view', 'prices.view', 'taxes.view',
         ],
         'cashier' => [
             'products.view',
+            'customers.view', 'customers.create',
             'sales.view', 'sales.create',
         ],
     ];

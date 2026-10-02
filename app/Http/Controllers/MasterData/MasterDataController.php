@@ -55,6 +55,26 @@ abstract class MasterDataController extends Controller implements HasMiddleware
     abstract protected function row(Model $record): array;
 
     /**
+     * Relations eager loaded when listing and editing records.
+     *
+     * @return array<int, string>
+     */
+    protected function relations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Extra props (e.g. select options) passed to the form page.
+     *
+     * @return array<string, mixed>
+     */
+    protected function formOptions(Request $request): array
+    {
+        return [];
+    }
+
+    /**
      * Get the middleware that should be assigned to the controller.
      *
      * @return array<int, Middleware>
@@ -75,15 +95,19 @@ abstract class MasterDataController extends Controller implements HasMiddleware
     {
         return Inertia::render($this->pagePath().'/index', [
             'rows' => $this->outletRecords($request)
+                ->with($this->relations())
                 ->orderBy('name')
                 ->get()
                 ->map(fn (Model $record) => $this->row($record)),
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render($this->pagePath().'/form', ['record' => null]);
+        return Inertia::render($this->pagePath().'/form', [
+            'record' => null,
+            ...$this->formOptions($request),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -101,7 +125,8 @@ abstract class MasterDataController extends Controller implements HasMiddleware
     public function edit(Request $request, string $currentTeam, int $id): Response
     {
         return Inertia::render($this->pagePath().'/form', [
-            'record' => $this->row($this->outletRecords($request)->findOrFail($id)),
+            'record' => $this->row($this->outletRecords($request)->with($this->relations())->findOrFail($id)),
+            ...$this->formOptions($request),
         ]);
     }
 

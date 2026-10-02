@@ -4,6 +4,8 @@ use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\TeamSeeder;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -78,4 +80,74 @@ test('non superadmin users cannot list admin users', function () {
     $this->actingAs(User::factory()->create()->assignRole(testRole('admin')))
         ->get(route('admin.users.index'))
         ->assertForbidden();
+});
+
+test('superadmin can create a user in an outlet with roles and a verification email', function () {
+    Notification::fake();
+    $outlet = Team::factory()->create(['name' => 'Cabang B']);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($outlet->id);
+    testRole('cashier');
+
+    $this->actingAs(User::factory()->superadmin()->create())
+        ->post(route('admin.users.store'), [
+            'name' => 'Budi',
+            'email' => 'budi@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'outlet' => $outlet->slug,
+            'roles' => ['cashier'],
+            'verified' => '0',
+        ])
+        ->assertRedirect(route('admin.users.index'));
+
+    $user = User::where('email', 'budi@example.com')->firstOrFail();
+
+    expect($user->email_verified_at)->toBeNull()
+        ->and($user->teams()->pluck('teams.id')->all())->toBe([$outlet->id]);
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+test('superadmin can edit a user without changing the password', function () {
+    $user = User::factory()->create();
+    $hash = $user->password;
+
+    $this->actingAs(User::factory()->superadmin()->create())
+        ->put(route('admin.users.update', $user), ['name' => 'Baru', 'email' => 'baru@example.com'])
+        ->assertRedirect(route('admin.users.index'));
+
+    expect($user->fresh()->name)->toBe('Baru')->and($user->fresh()->password)->toBe($hash);
+});
+
+test('superadmin can activate and deactivate a user', function () {
+    $user = User::factory()->unverified()->create();
+    $admin = User::factory()->superadmin()->create();
+
+    $this->actingAs($admin)->post(route('admin.users.activate', $user))->assertRedirect();
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+
+    $this->actingAs($admin)->post(route('admin.users.deactivate', $user))->assertRedirect();
+    expect($user->fresh()->email_verified_at)->toBeNull();
+
+    $this->actingAs($admin)->post(route('admin.users.deactivate', $admin))->assertForbidden();
+});
+
+test('superadmin can send a verification email only to unverified users', function () {
+    Notification::fake();
+    $unverified = User::factory()->unverified()->create();
+    $verified = User::factory()->create();
+    $admin = User::factory()->superadmin()->create();
+
+    $this->actingAs($admin)->post(route('admin.users.verification-notification', $unverified))->assertRedirect();
+    $this->actingAs($admin)->post(route('admin.users.verification-notification', $verified))->assertRedirect();
+
+    Notification::assertSentTo($unverified, VerifyEmail::class);
+    Notification::assertNotSentTo($verified, VerifyEmail::class);
+});
+
+test('non superadmin users cannot manage admin users', function () {
+    $user = User::factory()->unverified()->create();
+    $this->actingAs(User::factory()->create()->assignRole(testRole('admin')));
+
+    $this->get(route('admin.users.create'))->assertForbidden();
+    $this->post(route('admin.users.activate', $user))->assertForbidden();
 });

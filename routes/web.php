@@ -37,8 +37,12 @@ Route::middleware(['auth', 'verified', 'superadmin'])
         Route::get('outlets/template', [AdminOutletController::class, 'template'])->name('outlets.template');
         Route::get('outlets/{outlet}/export', [AdminOutletController::class, 'export'])->name('outlets.export');
         Route::post('outlets/{outlet}/import', [AdminOutletController::class, 'import'])->name('outlets.import');
+        Route::put('outlets/{outlet}/users', [AdminOutletController::class, 'syncUsers'])->name('outlets.users.sync');
         Route::resource('outlets', AdminOutletController::class)->except('show');
-        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/activate', [AdminUserController::class, 'activate'])->name('users.activate');
+        Route::post('users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->name('users.deactivate');
+        Route::post('users/{user}/verification-notification', [AdminUserController::class, 'sendVerification'])->name('users.verification-notification');
+        Route::resource('users', AdminUserController::class)->except(['show', 'destroy']);
         Route::get('landing-page', [AdminLandingPageController::class, 'edit'])->name('landing-page.edit');
         Route::put('landing-page', [AdminLandingPageController::class, 'update'])->name('landing-page.update');
     });

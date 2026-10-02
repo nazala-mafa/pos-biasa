@@ -225,3 +225,34 @@ test('exporting then importing carries transactions and keeps the totals consist
         ->and((float) $target->saleReturns()->sum('total'))->toBe((float) $this->defaultOutlet->saleReturns()->sum('total'))
         ->and($target->stockMovements()->count())->toBe($this->defaultOutlet->stockMovements()->count());
 });
+
+test('superadmin can sync the users of an outlet', function () {
+    $outlet = Team::factory()->create();
+    [$kept, $removed, $added] = User::factory()->count(3)->create();
+    $outlet->memberships()->createMany([
+        ['user_id' => $kept->id, 'role' => 'member'],
+        ['user_id' => $removed->id, 'role' => 'member'],
+    ]);
+    $removed->teams()->sync([$outlet->id => ['role' => 'member']]);
+    $removed->update(['current_team_id' => $outlet->id]);
+
+    $this->actingAs($this->admin)
+        ->put(route('admin.outlets.users.sync', $outlet), ['user_ids' => [$kept->id, $added->id]])
+        ->assertRedirect(route('admin.outlets.edit', $outlet));
+
+    expect($outlet->memberships()->pluck('user_id')->sort()->values()->all())->toBe([$kept->id, $added->id])
+        ->and($removed->refresh()->teams()->pluck('name')->all())->toBe([AssignDefaultTeam::NAME])
+        ->and($removed->current_team_id)->toBe($this->defaultOutlet->id);
+});
+
+test('the default outlet users cannot be synced and superadmins are rejected', function () {
+    $outlet = Team::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->put(route('admin.outlets.users.sync', $this->defaultOutlet), ['user_ids' => []])
+        ->assertForbidden();
+
+    $this->actingAs($this->admin)
+        ->put(route('admin.outlets.users.sync', $outlet), ['user_ids' => [$this->admin->id]])
+        ->assertSessionHasErrors('user_ids.0');
+});

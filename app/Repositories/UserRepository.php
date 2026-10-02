@@ -2,12 +2,14 @@
 
 namespace App\Repositories;
 
+use App\Actions\Teams\AssignDefaultTeam;
 use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserRepository
 {
@@ -73,19 +75,33 @@ class UserRepository
      * @param  array{name: string, email: string, password: string}  $data
      * @param  array<int, string>  $roles
      */
-    public function createForOutlet(Team $outlet, array $data, array $roles): User
+    public function createForOutlet(Team $outlet, array $data, array $roles, bool $verified = true): User
     {
-        return DB::transaction(function () use ($outlet, $data, $roles) {
+        return DB::transaction(function () use ($outlet, $data, $roles, $verified) {
             $user = User::create($data);
-            $user->forceFill(['email_verified_at' => now()])->save();
+            $user->forceFill(['email_verified_at' => $verified ? now() : null])->save();
 
             $outlet->memberships()->create(['user_id' => $user->id, 'role' => TeamRole::Member]);
             $user->switchTeam($outlet);
 
+            $registrar = app(PermissionRegistrar::class);
+            $previousTeamId = $registrar->getPermissionsTeamId();
+            $registrar->setPermissionsTeamId($outlet->id);
             $user->syncRoles($roles);
+            $registrar->setPermissionsTeamId($previousTeamId);
 
             return $user;
         });
+    }
+
+    public function activate(User $user): void
+    {
+        $user->forceFill(['email_verified_at' => now()])->save();
+    }
+
+    public function deactivate(User $user): void
+    {
+        $user->forceFill(['email_verified_at' => null])->save();
     }
 
     /**
@@ -107,6 +123,22 @@ class UserRepository
     }
 
     /**
+     * @param  array{name: string, email: string}  $data
+     */
+    public function updateAccount(User $user, array $data, ?string $password): User
+    {
+        $user->fill($data);
+
+        if ($password !== null && $password !== '') {
+            $user->password = $password;
+        }
+
+        $user->save();
+
+        return $user;
+    }
+
+    /**
      * Remove the user from the outlet, deleting the account when no other outlet remains.
      */
     public function removeFromOutlet(Team $outlet, User $user): void
@@ -121,6 +153,40 @@ class UserRepository
 
             if (! $user->teams()->exists()) {
                 $user->delete();
+            }
+        });
+    }
+
+    /**
+     * Make exactly the given non-superadmin users the members of the outlet.
+     * Users left without any outlet fall back to the default outlet.
+     *
+     * @param  array<int, int>  $userIds
+     */
+    public function syncOutletMembers(Team $outlet, array $userIds): void
+    {
+        DB::transaction(function () use ($outlet, $userIds) {
+            $currentIds = $this->memberQuery($outlet)->where('is_superadmin', false)->pluck('users.id')->all();
+
+            foreach (array_diff($userIds, $currentIds) as $userId) {
+                $outlet->memberships()->create(['user_id' => $userId, 'role' => TeamRole::Member]);
+            }
+
+            $removed = User::query()->whereIn('id', array_diff($currentIds, $userIds))->get();
+
+            foreach ($removed as $user) {
+                DB::table('model_has_roles')
+                    ->where('model_type', $user->getMorphClass())
+                    ->where('model_id', $user->id)
+                    ->where('team_id', $outlet->id)
+                    ->delete();
+                $outlet->memberships()->where('user_id', $user->id)->delete();
+
+                if (! $user->teams()->exists()) {
+                    app(AssignDefaultTeam::class)->handle($user);
+                } elseif ($user->current_team_id === $outlet->id) {
+                    $user->update(['current_team_id' => $user->fallbackTeam()?->id]);
+                }
             }
         });
     }

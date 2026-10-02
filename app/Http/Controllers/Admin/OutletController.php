@@ -8,9 +8,12 @@ use App\Exports\OutletDataExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\ImportOutletRequest;
 use App\Http\Requests\Outlet\StoreOutletRequest;
+use App\Http\Requests\Outlet\SyncOutletUsersRequest;
 use App\Http\Requests\Outlet\UpdateOutletRequest;
 use App\Models\Team;
+use App\Models\User;
 use App\Repositories\OutletRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OutletController extends Controller
 {
-    public function __construct(private OutletRepository $outlets) {}
+    public function __construct(private OutletRepository $outlets, private UserRepository $users) {}
 
     /**
      * Display a listing of outlets.
@@ -69,6 +72,10 @@ class OutletController extends Controller
                 'name' => $outlet->name,
                 'isDefault' => $this->isDefault($outlet),
             ],
+            'users' => User::query()->where('is_superadmin', false)->orderBy('name')
+                ->get(['id', 'name', 'email'])
+                ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email]),
+            'memberIds' => $this->users->membersOf($outlet)->pluck('id')->values(),
         ]);
     }
 
@@ -84,6 +91,20 @@ class OutletController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet updated.')]);
 
         return to_route('admin.outlets.index');
+    }
+
+    /**
+     * Sync the users that belong to the outlet.
+     */
+    public function syncUsers(SyncOutletUsersRequest $request, Team $outlet): RedirectResponse
+    {
+        abort_if($this->isDefault($outlet), 403, __('The default outlet cannot be modified.'));
+
+        $this->users->syncOutletMembers($outlet, array_map('intval', $request->validated('user_ids')));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet users updated.')]);
+
+        return to_route('admin.outlets.edit', $outlet);
     }
 
     /**

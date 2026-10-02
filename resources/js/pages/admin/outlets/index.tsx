@@ -1,6 +1,14 @@
-import { Head, Link } from "@inertiajs/react";
-import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Head, Link, router } from "@inertiajs/react";
+import {
+    Download,
+    ExternalLink,
+    FileSpreadsheet,
+    Pencil,
+    Plus,
+    Trash2,
+    Upload,
+} from "lucide-react";
+import { useRef, useState } from "react";
 import DataTable from "@/components/data-table";
 import type { DataTableColumn } from "@/components/data-table";
 import DeleteConfirmModal from "@/components/delete-confirm-modal";
@@ -8,7 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { dashboard as outletDashboard } from "@/routes";
 import { dashboard } from "@/routes/admin";
-import { create, destroy, edit, index } from "@/routes/admin/outlets";
+import {
+    create,
+    destroy,
+    edit,
+    index,
+} from "@/routes/admin/outlets";
+import outletRoutes from "@/routes/admin/outlets";
 
 type OutletRow = {
     slug: string;
@@ -22,6 +36,31 @@ export default function OutletsIndex({ outlets }: { outlets: OutletRow[] }) {
     const [outletToDelete, setOutletToDelete] = useState<OutletRow | null>(
         null,
     );
+
+    const fileInput = useRef<HTMLInputElement>(null);
+    const [importing, setImporting] = useState(false);
+
+    const importFile = (file: File | undefined) => {
+        if (!file) {
+            return;
+        }
+
+        router.post(
+            outletRoutes.import.url(),
+            { file },
+            {
+                forceFormData: true,
+                onStart: () => setImporting(true),
+                onFinish: () => {
+                    setImporting(false);
+
+                    if (fileInput.current) {
+                        fileInput.current.value = "";
+                    }
+                },
+            },
+        );
+    };
 
     const columns: DataTableColumn<OutletRow>[] = [
         {
@@ -96,11 +135,41 @@ export default function OutletsIndex({ outlets }: { outlets: OutletRow[] }) {
                 title="Outlets"
                 description="Manage your outlets (branches)"
                 actions={
-                    <Button asChild data-test="outlets-new-button">
-                        <Link href={create()}>
-                            <Plus /> New outlet
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <input
+                            ref={fileInput}
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            className="hidden"
+                            data-test="outlets-import-input"
+                            onChange={(event) =>
+                                importFile(event.target.files?.[0])
+                            }
+                        />
+                        <Button variant="outline" asChild>
+                            <a href={outletRoutes.template.url()}>
+                                <FileSpreadsheet /> Template
+                            </a>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            disabled={importing}
+                            onClick={() => fileInput.current?.click()}
+                            data-test="outlets-import-button"
+                        >
+                            <Upload /> Import
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href={outletRoutes.export.url()}>
+                                <Download /> Export
+                            </a>
+                        </Button>
+                        <Button asChild data-test="outlets-new-button">
+                            <Link href={create()}>
+                                <Plus /> New outlet
+                            </Link>
+                        </Button>
+                    </div>
                 }
                 columns={columns}
                 rows={outlets}

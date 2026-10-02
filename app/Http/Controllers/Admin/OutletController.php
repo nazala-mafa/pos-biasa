@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Teams\AssignDefaultTeam;
+use App\Exports\OutletsExport;
+use App\Exports\OutletsTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Outlet\ImportOutletRequest;
 use App\Http\Requests\Outlet\StoreOutletRequest;
 use App\Http\Requests\Outlet\UpdateOutletRequest;
+use App\Imports\OutletsImport;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OutletController extends Controller
 {
@@ -20,7 +26,6 @@ class OutletController extends Controller
     {
         return Inertia::render('admin/outlets/index', [
             'outlets' => Team::query()
-                ->where('is_personal', false)
                 ->withCount('members')
                 ->orderBy('name')
                 ->get()
@@ -47,7 +52,7 @@ class OutletController extends Controller
      */
     public function store(StoreOutletRequest $request): RedirectResponse
     {
-        Team::create(['name' => $request->validated('name'), 'is_personal' => false]);
+        Team::create(['name' => $request->validated('name')]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet created.')]);
 
@@ -59,7 +64,6 @@ class OutletController extends Controller
      */
     public function edit(Team $outlet): Response
     {
-        abort_if($outlet->is_personal, 404);
 
         return Inertia::render('admin/outlets/form', [
             'outlet' => [
@@ -75,7 +79,6 @@ class OutletController extends Controller
      */
     public function update(UpdateOutletRequest $request, Team $outlet): RedirectResponse
     {
-        abort_if($outlet->is_personal, 404);
         abort_if($this->isDefault($outlet), 403, __('The default outlet cannot be modified.'));
 
         $outlet->update(['name' => $request->validated('name')]);
@@ -90,7 +93,6 @@ class OutletController extends Controller
      */
     public function destroy(Team $outlet): RedirectResponse
     {
-        abort_if($outlet->is_personal, 404);
         abort_if($this->isDefault($outlet), 403, __('The default outlet cannot be deleted.'));
 
         if ($outlet->memberships()->exists()) {
@@ -102,6 +104,48 @@ class OutletController extends Controller
         $outlet->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet deleted.')]);
+
+        return to_route('admin.outlets.index');
+    }
+
+    /**
+     * Export all outlets to an Excel file.
+     */
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new OutletsExport, 'outlets.xlsx');
+    }
+
+    /**
+     * Download the Excel template used for importing outlets.
+     */
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(new OutletsTemplateExport, 'outlets-template.xlsx');
+    }
+
+    /**
+     * Import outlets from an uploaded Excel file.
+     */
+    public function import(ImportOutletRequest $request): RedirectResponse
+    {
+        $import = new OutletsImport;
+
+        Excel::import($import, $request->file('file'));
+
+        $failed = count($import->failures);
+        $message = __(':imported outlet(s) imported.', ['imported' => $import->imported]);
+
+        if ($failed > 0) {
+            $details = collect($import->failures)
+                ->take(5)
+                ->map(fn (string $error, int $line) => __('Row :line: :error', ['line' => $line, 'error' => $error]))
+                ->implode('; ');
+
+            $message .= ' '.__(':failed row(s) skipped. :details', ['failed' => $failed, 'details' => $details]);
+        }
+
+        Inertia::flash('toast', ['type' => $import->imported > 0 ? 'success' : 'error', 'message' => $message]);
 
         return to_route('admin.outlets.index');
     }

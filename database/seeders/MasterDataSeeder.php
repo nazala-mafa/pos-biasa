@@ -12,7 +12,7 @@ class MasterDataSeeder extends Seeder
      */
     public function run(): void
     {
-        Team::where('is_personal', false)->each(function (Team $outlet) {
+        Team::query()->each(function (Team $outlet) {
             foreach (['Food', 'Beverage', 'Other'] as $name) {
                 $outlet->productCategories()->firstOrCreate(['name' => $name]);
             }

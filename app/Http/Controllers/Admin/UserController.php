@@ -22,7 +22,6 @@ class UserController extends Controller
 
         $users = User::query()
             ->with(['teamMemberships' => fn ($query) => $query
-                ->whereHas('team', fn ($team) => $team->where('is_personal', false))
                 ->with('team:id,name')])
             ->orderBy('name')
             ->get()

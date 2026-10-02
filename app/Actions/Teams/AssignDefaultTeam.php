@@ -17,8 +17,8 @@ class AssignDefaultTeam
     public function handle(User $user, TeamRole $role = TeamRole::Member): Team
     {
         return DB::transaction(function () use ($user, $role) {
-            $team = Team::where('name', self::NAME)->where('is_personal', false)->first()
-                ?? Team::create(['name' => self::NAME, 'is_personal' => false]);
+            $team = Team::where('name', self::NAME)->first()
+                ?? Team::create(['name' => self::NAME]);
 
             $team->memberships()->firstOrCreate(['user_id' => $user->id], ['role' => $role]);
 

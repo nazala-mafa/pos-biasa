@@ -51,8 +51,7 @@ test('database seeder creates the default POS team with the seeded superadmin', 
 
     $team = Team::where('name', 'POS')->sole();
 
-    expect($team->is_personal)->toBeFalse()
-        ->and($team->members()->count())->toBe(1)
+    expect($team->members()->count())->toBe(1)
         ->and(User::where('email', 'superadmin@example.com')->first()->currentTeam->is($team))->toBeTrue();
 });
 
@@ -71,7 +70,7 @@ test('superadmin can list users with their outlet and role', function () {
             ->where('users', fn ($users) => collect($users)->contains(
                 fn ($row) => $row['email'] === $user->email
                     && $row['username'] === $user->name
-                    && $row['outlets'] === [['outlet' => 'Cabang A', 'roles' => ['cashier']]]
+                    && in_array(['outlet' => 'Cabang A', 'roles' => ['cashier']], $row['outlets'], true)
             )));
 });
 

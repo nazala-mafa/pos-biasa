@@ -9,7 +9,7 @@ return new class extends Migration
 {
     /**
      * Add the team (outlet) foreign key to databases created before permission teams were enabled.
-     * Existing role assignments are moved to the default non-personal outlet.
+     * Existing role assignments are moved to the default outlet.
      */
     public function up(): void
     {
@@ -29,7 +29,7 @@ return new class extends Migration
             });
         }
 
-        $defaultTeamId = DB::table('teams')->where('is_personal', false)->orderBy('id')->value('id') ?? 0;
+        $defaultTeamId = DB::table('teams')->orderBy('id')->value('id') ?? 0;
 
         $this->addTeamToPivot($tableNames['model_has_roles'], $teamKey, $pivotRole, $modelKey, $defaultTeamId, 'model_has_roles');
         $this->addTeamToPivot($tableNames['model_has_permissions'], $teamKey, $pivotPermission, $modelKey, $defaultTeamId, 'model_has_permissions');

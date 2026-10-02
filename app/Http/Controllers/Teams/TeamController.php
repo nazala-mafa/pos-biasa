@@ -55,7 +55,6 @@ class TeamController extends Controller
                 'id' => $team->id,
                 'name' => $team->name,
                 'slug' => $team->slug,
-                'isPersonal' => $team->is_personal,
             ],
             'members' => $team->members()->get()->map(function (User $member) {
                 /** @var Membership $membership */
@@ -156,7 +155,7 @@ class TeamController extends Controller
         DB::transaction(function () use ($user, $team) {
             User::where('current_team_id', $team->id)
                 ->where('id', '!=', $user->id)
-                ->each(fn (User $affectedUser) => $affectedUser->switchTeam($affectedUser->personalTeam()));
+                ->each(fn (User $affectedUser) => $affectedUser->switchTeam($affectedUser->fallbackTeam($team)));
 
             $team->invitations()->delete();
             $team->memberships()->delete();

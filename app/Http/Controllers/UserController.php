@@ -128,7 +128,7 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
-     * Remove the user from the current outlet, deleting the account when no other (non-personal) outlet remains.
+     * Remove the user from the current outlet, deleting the account when no other outlet remains.
      */
     public function destroy(Request $request, string $currentTeam, User $user): RedirectResponse
     {
@@ -146,7 +146,7 @@ class UserController extends Controller implements HasMiddleware
                 $user->update(['current_team_id' => $user->fallbackTeam()?->id]);
             }
 
-            if (! $user->teams()->where('is_personal', false)->exists()) {
+            if (! $user->teams()->exists()) {
                 $user->delete();
             }
         });

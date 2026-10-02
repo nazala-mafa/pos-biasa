@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -117,6 +118,7 @@ test('admin can update a user and keep password when blank', function () {
 
 test('admin can delete another user but not themselves', function () {
     $user = outletMember($this->outlet);
+    Membership::where('user_id', $user->id)->where('team_id', '!=', $this->outlet->id)->delete();
 
     $this->actingAs($this->admin)->delete(route('users.destroy', $user))->assertRedirect(route('users.index'));
     $this->assertModelMissing($user);

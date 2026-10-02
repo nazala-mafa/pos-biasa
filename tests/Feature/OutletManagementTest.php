@@ -4,7 +4,9 @@ use App\Actions\Teams\AssignDefaultTeam;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
+use Maatwebsite\Excel\Facades\Excel;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -12,14 +14,13 @@ beforeEach(function () {
     $this->defaultOutlet = Team::create(['name' => AssignDefaultTeam::NAME]);
 });
 
-test('superadmin can list outlets without personal teams', function () {
-    Team::factory()->personal()->create();
+test('superadmin can list outlets', function () {
     Team::factory()->create();
 
     $this->actingAs($this->admin)
         ->get(route('admin.outlets.index'))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('admin/outlets/index')->has('outlets', 2));
+        ->assertInertia(fn (Assert $page) => $page->component('admin/outlets/index')->has('outlets', 3));
 });
 
 test('non superadmin users cannot manage outlets, even with the admin role', function () {
@@ -37,7 +38,7 @@ test('superadmin can create an outlet', function () {
         ->post(route('admin.outlets.store'), ['name' => 'Cabang Bandung'])
         ->assertRedirect(route('admin.outlets.index'));
 
-    expect(Team::where('name', 'Cabang Bandung')->where('is_personal', false)->exists())->toBeTrue();
+    expect(Team::where('name', 'Cabang Bandung')->exists())->toBeTrue();
 });
 
 test('outlet name is required, unique and not reserved', function () {
@@ -88,4 +89,33 @@ test('superadmin can open the dashboard of an outlet they are not a member of', 
         ->assertOk();
 
     expect($this->admin->refresh()->current_team_id)->toBe($outlet->id);
+});
+
+test('superadmin can export outlets to excel', function () {
+    Excel::fake();
+
+    $this->actingAs($this->admin)->get(route('admin.outlets.export'))->assertOk();
+
+    Excel::assertDownloaded('outlets.xlsx');
+});
+
+test('superadmin can import outlets from a spreadsheet and invalid rows are skipped', function () {
+    $path = tempnam(sys_get_temp_dir(), 'outlets').'.csv';
+    file_put_contents($path, "name\nCabang Bandung\nCabang Bandung\nadmin\n".AssignDefaultTeam::NAME."\nCabang Solo\n");
+    $file = new UploadedFile($path, 'outlets.csv', 'text/csv', null, true);
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.outlets.import'), ['file' => $file])
+        ->assertRedirect(route('admin.outlets.index'));
+
+    expect(Team::whereIn('name', [AssignDefaultTeam::NAME, 'Cabang Bandung', 'Cabang Solo', 'admin'])->pluck('name')->all())
+        ->toEqualCanonicalizing([AssignDefaultTeam::NAME, 'Cabang Bandung', 'Cabang Solo']);
+});
+
+test('outlet import requires a spreadsheet file and a superadmin', function () {
+    $this->actingAs($this->admin)->post(route('admin.outlets.import'), [])->assertSessionHasErrors('file');
+
+    $user = User::factory()->create()->assignRole('admin');
+    $this->actingAs($user)->get(route('admin.outlets.export'))->assertForbidden();
+    $this->actingAs($user)->post(route('admin.outlets.import'), [])->assertForbidden();
 });

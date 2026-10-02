@@ -66,16 +66,6 @@ trait HasTeams
     }
 
     /**
-     * Get the user's personal team.
-     */
-    public function personalTeam(): ?Team
-    {
-        return $this->ownedTeams()
-            ->where('teams.is_personal', true)
-            ->first();
-    }
-
-    /**
      * Switch to the given team.
      */
     public function switchTeam(Team $team): bool
@@ -152,7 +142,6 @@ trait HasTeams
             id: $team->id,
             name: $team->name,
             slug: $team->slug,
-            isPersonal: $team->is_personal,
             role: $role?->value,
             roleLabel: $role?->label(),
             isCurrent: $this->isCurrentTeam($team),

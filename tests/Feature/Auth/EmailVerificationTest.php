@@ -23,7 +23,7 @@ test('unverified users are redirected to the email verification prompt', functio
 
 test('email can be verified', function () {
     $user = User::factory()->unverified()->create();
-    $team = $user->personalTeam();
+    $team = $user->currentTeam;
 
     Event::fake();
 
@@ -87,7 +87,7 @@ test('verified user is redirected to dashboard from verification prompt', functi
 
 test('already verified user visiting verification link is redirected without firing event again', function () {
     $user = User::factory()->create();
-    $team = $user->personalTeam();
+    $team = $user->currentTeam;
 
     Event::fake();
 

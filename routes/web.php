@@ -25,6 +25,9 @@ Route::middleware(['auth', 'verified', 'superadmin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::get('outlets/export', [AdminOutletController::class, 'export'])->name('outlets.export');
+        Route::get('outlets/template', [AdminOutletController::class, 'template'])->name('outlets.template');
+        Route::post('outlets/import', [AdminOutletController::class, 'import'])->name('outlets.import');
         Route::resource('outlets', AdminOutletController::class)->except('show');
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
     });

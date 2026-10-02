@@ -28,7 +28,6 @@ test('teams can be created', function () {
 
     $this->assertDatabaseHas('teams', [
         'name' => 'Test Team',
-        'is_personal' => false,
     ]);
 });
 
@@ -175,9 +174,9 @@ test('deleting current team switches to alphabetically first remaining team', fu
     expect($user->fresh()->current_team_id)->toEqual($alphaTeam->id);
 });
 
-test('deleting current team falls back to personal team when alphabetically first', function () {
+test('deleting current team falls back to another team when alphabetically first', function () {
     $user = User::factory()->create();
-    $personalTeam = $user->personalTeam();
+    $fallbackTeam = $user->currentTeam;
     $team = Team::factory()->create(['name' => 'Zulu Team']);
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
@@ -195,16 +194,16 @@ test('deleting current team falls back to personal team when alphabetically firs
         'id' => $team->id,
     ]);
 
-    expect($user->fresh()->current_team_id)->toEqual($personalTeam->id);
+    expect($user->fresh()->current_team_id)->toEqual($fallbackTeam->id);
 });
 
 test('deleting non current team leaves current team unchanged', function () {
     $user = User::factory()->create();
-    $personalTeam = $user->personalTeam();
+    $fallbackTeam = $user->currentTeam;
     $team = Team::factory()->create();
     $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-    $user->update(['current_team_id' => $personalTeam->id]);
+    $user->update(['current_team_id' => $fallbackTeam->id]);
 
     $response = $this
         ->actingAs($user)
@@ -218,10 +217,10 @@ test('deleting non current team leaves current team unchanged', function () {
         'id' => $team->id,
     ]);
 
-    expect($user->fresh()->current_team_id)->toEqual($personalTeam->id);
+    expect($user->fresh()->current_team_id)->toEqual($fallbackTeam->id);
 });
 
-test('members can leave non personal teams', function () {
+test('members can leave teams', function () {
     $owner = User::factory()->create();
     $member = User::factory()->create();
     $team = Team::factory()->create();
@@ -265,19 +264,6 @@ test('leaving current team switches to alphabetically first remaining team', fun
     expect($member->fresh()->current_team_id)->toEqual($alphaTeam->id);
 });
 
-test('personal teams cannot be left', function () {
-    $user = User::factory()->create();
-    $personalTeam = $user->personalTeam();
-
-    $response = $this
-        ->actingAs($user)
-        ->delete(route('teams.leave', $personalTeam));
-
-    $response->assertForbidden();
-
-    expect($user->fresh()->belongsToTeam($personalTeam))->toBeTrue();
-});
-
 test('team owners cannot leave their team', function () {
     $owner = User::factory()->create();
     $team = Team::factory()->create();
@@ -304,7 +290,7 @@ test('users cannot leave teams they dont belong to', function () {
     $response->assertForbidden();
 });
 
-test('deleting team switches other affected users to their personal team', function () {
+test('deleting team switches other affected users to their fallback team', function () {
     $owner = User::factory()->create();
     $member = User::factory()->create();
 
@@ -323,26 +309,7 @@ test('deleting team switches other affected users to their personal team', funct
 
     $response->assertRedirect();
 
-    expect($member->fresh()->current_team_id)->toEqual($member->personalTeam()->id);
-});
-
-test('personal teams cannot be deleted', function () {
-    $user = User::factory()->create();
-
-    $personalTeam = $user->personalTeam();
-
-    $response = $this
-        ->actingAs($user)
-        ->delete(route('teams.destroy', $personalTeam), [
-            'name' => $personalTeam->name,
-        ]);
-
-    $response->assertForbidden();
-
-    $this->assertDatabaseHas('teams', [
-        'id' => $personalTeam->id,
-        'deleted_at' => null,
-    ]);
+    expect($member->fresh()->current_team_id)->toEqual($member->fallbackTeam($team)->id);
 });
 
 test('teams cannot be deleted by non owners', function () {

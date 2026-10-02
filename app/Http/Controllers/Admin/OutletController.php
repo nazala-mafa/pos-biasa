@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Outlets\ImportOutletData;
 use App\Actions\Teams\AssignDefaultTeam;
-use App\Exports\OutletsExport;
-use App\Exports\OutletsTemplateExport;
+use App\Exports\OutletDataExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\ImportOutletRequest;
 use App\Http\Requests\Outlet\StoreOutletRequest;
 use App\Http\Requests\Outlet\UpdateOutletRequest;
-use App\Imports\OutletsImport;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -109,45 +108,40 @@ class OutletController extends Controller
     }
 
     /**
-     * Export all outlets to an Excel file.
+     * Export every menu of the outlet to one Excel file, one sheet per menu.
      */
-    public function export(): BinaryFileResponse
+    public function export(Team $outlet): BinaryFileResponse
     {
-        return Excel::download(new OutletsExport, 'outlets.xlsx');
+        return Excel::download(new OutletDataExport($outlet), "{$outlet->slug}.xlsx");
     }
 
     /**
-     * Download the Excel template used for importing outlets.
+     * Download the empty Excel template used for importing outlet data.
      */
     public function template(): BinaryFileResponse
     {
-        return Excel::download(new OutletsTemplateExport, 'outlets-template.xlsx');
+        return Excel::download(new OutletDataExport, 'outlet-template.xlsx');
     }
 
     /**
-     * Import outlets from an uploaded Excel file.
+     * Import every menu of the outlet from an uploaded Excel file.
      */
-    public function import(ImportOutletRequest $request): RedirectResponse
+    public function import(ImportOutletRequest $request, Team $outlet, ImportOutletData $importOutletData): RedirectResponse
     {
-        $import = new OutletsImport;
-
-        Excel::import($import, $request->file('file'));
+        $import = $importOutletData->handle($outlet, $request->file('file'));
 
         $failed = count($import->failures);
-        $message = __(':imported outlet(s) imported.', ['imported' => $import->imported]);
+        $message = __(':imported row(s) imported.', ['imported' => $import->total()]);
 
         if ($failed > 0) {
-            $details = collect($import->failures)
-                ->take(5)
-                ->map(fn (string $error, int $line) => __('Row :line: :error', ['line' => $line, 'error' => $error]))
-                ->implode('; ');
+            $details = collect($import->failures)->take(5)->implode('; ');
 
             $message .= ' '.__(':failed row(s) skipped. :details', ['failed' => $failed, 'details' => $details]);
         }
 
-        Inertia::flash('toast', ['type' => $import->imported > 0 ? 'success' : 'error', 'message' => $message]);
+        Inertia::flash('toast', ['type' => $import->total() > 0 ? 'success' : 'error', 'message' => $message]);
 
-        return to_route('admin.outlets.index');
+        return to_route('admin.outlets.edit', $outlet);
     }
 
     private function isDefault(Team $outlet): bool

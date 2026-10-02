@@ -1,11 +1,18 @@
 <?php
 
+use App\Actions\Outlets\ImportOutletData;
 use App\Actions\Teams\AssignDefaultTeam;
+use App\Exports\OutletDataExport;
+use App\Exports\OutletDataSheetExport;
 use App\Models\Team;
 use App\Models\User;
+use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
+use Maatwebsite\Excel\Concerns\Export;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Excel as ExcelType;
 use Maatwebsite\Excel\Facades\Excel;
 
 beforeEach(function () {
@@ -91,31 +98,94 @@ test('superadmin can open the dashboard of an outlet they are not a member of', 
     expect($this->admin->refresh()->current_team_id)->toBe($outlet->id);
 });
 
-test('superadmin can export outlets to excel', function () {
+test('superadmin can export an outlet to excel', function () {
     Excel::fake();
 
-    $this->actingAs($this->admin)->get(route('admin.outlets.export'))->assertOk();
+    $this->actingAs($this->admin)->get(route('admin.outlets.export', $this->defaultOutlet))->assertOk();
 
-    Excel::assertDownloaded('outlets.xlsx');
+    Excel::assertDownloaded($this->defaultOutlet->slug.'.xlsx');
 });
 
-test('superadmin can import outlets from a spreadsheet and invalid rows are skipped', function () {
-    $path = tempnam(sys_get_temp_dir(), 'outlets').'.csv';
-    file_put_contents($path, "name\nCabang Bandung\nCabang Bandung\nadmin\n".AssignDefaultTeam::NAME."\nCabang Solo\n");
-    $file = new UploadedFile($path, 'outlets.csv', 'text/csv', null, true);
+test('superadmin can download the import template', function () {
+    Excel::fake();
+
+    $this->actingAs($this->admin)->get(route('admin.outlets.template'))->assertOk();
+
+    Excel::assertDownloaded('outlet-template.xlsx');
+});
+
+test('exporting then importing an outlet copies every menu and skips invalid rows', function () {
+    $source = Team::factory()->create();
+    $category = $source->productCategories()->create(['name' => 'Food']);
+    $unit = $source->units()->create(['name' => 'Piece', 'abbreviation' => 'pcs']);
+    $tax = $source->taxes()->create(['name' => 'PPN', 'rate' => 11]);
+    $source->prices()->create(['name' => 'Retail']);
+    $supplier = $source->suppliers()->create(['name' => 'Acme']);
+    $source->customers()->create(['name' => 'Budi', 'email' => 'budi@example.com']);
+    $product = $source->products()->create([
+        'sku' => 'SKU-1', 'name' => 'Nasi', 'product_category_id' => $category->id, 'unit_id' => $unit->id,
+        'tax_id' => $tax->id, 'selling_price' => 15000,
+    ]);
+    $source->stockMovements()->create(['product_id' => $product->id, 'supplier_id' => $supplier->id, 'type' => 'in', 'quantity' => 5]);
+
+    $path = tempnam(sys_get_temp_dir(), 'outlet').'.xlsx';
+    file_put_contents($path, Excel::raw(new OutletDataExport($source), ExcelType::XLSX));
+
+    $target = Team::factory()->create();
+    $file = new UploadedFile($path, 'outlet.xlsx', null, null, true);
 
     $this->actingAs($this->admin)
-        ->post(route('admin.outlets.import'), ['file' => $file])
-        ->assertRedirect(route('admin.outlets.index'));
+        ->post(route('admin.outlets.import', $target), ['file' => $file])
+        ->assertRedirect(route('admin.outlets.edit', $target));
 
-    expect(Team::whereIn('name', [AssignDefaultTeam::NAME, 'Cabang Bandung', 'Cabang Solo', 'admin'])->pluck('name')->all())
-        ->toEqualCanonicalizing([AssignDefaultTeam::NAME, 'Cabang Bandung', 'Cabang Solo']);
+    $copy = $target->products()->with(['productCategory', 'unit', 'tax'])->sole();
+
+    expect($copy->sku)->toBe('SKU-1')
+        ->and($copy->productCategory->name)->toBe('Food')
+        ->and($copy->unit->name)->toBe('Piece')
+        ->and((float) $copy->tax->rate)->toBe(11.0)
+        ->and((float) $copy->selling_price)->toBe(15000.0)
+        ->and($target->prices()->count())->toBe(1)
+        ->and($target->customers()->sole()->email)->toBe('budi@example.com')
+        ->and($target->stockMovements()->sole()->supplier->name)->toBe('Acme');
+
+    $this->actingAs($this->admin)->post(route('admin.outlets.import', $target), ['file' => $file]);
+    expect($target->products()->count())->toBe(1)->and($target->units()->count())->toBe(1);
+});
+
+test('rows with unknown references are skipped', function () {
+    $outlet = Team::factory()->create();
+    $path = tempnam(sys_get_temp_dir(), 'outlet').'.xlsx';
+    file_put_contents($path, Excel::raw(new class implements Export, WithMultipleSheets
+    {
+        public function sheets(): array
+        {
+            return [
+                new OutletDataSheetExport('products', OutletDataExport::SHEETS['products'], [
+                    ['A', 'Good', null, null, null, null, 1, 2, 0, 1],
+                    ['B', 'Bad category', 'Nope', null, null, null, 1, 2, 0, 1],
+                ]),
+            ];
+        }
+    }, ExcelType::XLSX));
+
+    $import = app(ImportOutletData::class)->handle($outlet, $path);
+
+    expect($outlet->products()->pluck('sku')->all())->toBe(['A'])
+        ->and($import->failures)->toHaveCount(1);
 });
 
 test('outlet import requires a spreadsheet file and a superadmin', function () {
-    $this->actingAs($this->admin)->post(route('admin.outlets.import'), [])->assertSessionHasErrors('file');
+    $this->actingAs($this->admin)->post(route('admin.outlets.import', $this->defaultOutlet), [])->assertSessionHasErrors('file');
 
     $user = User::factory()->create()->assignRole('admin');
-    $this->actingAs($user)->get(route('admin.outlets.export'))->assertForbidden();
-    $this->actingAs($user)->post(route('admin.outlets.import'), [])->assertForbidden();
+    $this->actingAs($user)->get(route('admin.outlets.export', $this->defaultOutlet))->assertForbidden();
+    $this->actingAs($user)->post(route('admin.outlets.import', $this->defaultOutlet), [])->assertForbidden();
+});
+
+test('the master data seeder imports the bundled workbook into the pos outlet', function () {
+    $this->seed(MasterDataSeeder::class);
+
+    expect($this->defaultOutlet->productCategories()->pluck('name')->all())->toEqualCanonicalizing(['Food', 'Beverage', 'Other'])
+        ->and($this->defaultOutlet->taxes()->sole()->name)->toBe('PPN');
 });

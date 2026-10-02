@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\GeneratesUniqueTeamSlugs;
 use App\Enums\TeamRole;
+use App\Repositories\RoleRepository;
 use Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,6 +43,10 @@ class Team extends Model
             if (empty($team->slug)) {
                 $team->slug = static::generateUniqueTeamSlug($team->name);
             }
+        });
+
+        static::created(function (Team $team) {
+            app(RoleRepository::class)->createDefaultsFor($team);
         });
 
         static::updating(function (Team $team) {

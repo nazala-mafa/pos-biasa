@@ -5,7 +5,6 @@ import { useState } from "react";
 import DataTable from "@/components/data-table";
 import type { DataTableColumn } from "@/components/data-table";
 import DeleteConfirmModal from "@/components/delete-confirm-modal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { create, destroy, edit, index } from "@/routes/roles";
 
@@ -14,7 +13,6 @@ type RoleRow = {
     name: string;
     usersCount: number;
     permissionsCount: number;
-    isProtected: boolean;
     createdAt: string | null;
 };
 
@@ -30,14 +28,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
             id: "name",
             header: "Name",
             searchValue: (role) => role.name,
-            cell: (role) => (
-                <div className="flex items-center gap-2">
-                    <span className="font-medium">{role.name}</span>
-                    {role.isProtected ? (
-                        <Badge variant="secondary">Protected</Badge>
-                    ) : null}
-                </div>
-            ),
+            cell: (role) => <span className="font-medium">{role.name}</span>,
         },
         {
             id: "permissions",
@@ -59,31 +50,30 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
             id: "actions",
             header: "Actions",
             className: "text-right",
-            cell: (role) =>
-                !role.isProtected ? (
-                    <div className="flex items-center justify-end gap-2">
-                        {can("roles.update") ? (
-                            <Button variant="ghost" size="sm" asChild>
-                                <Link
-                                    href={edit([team, role.id])}
-                                    aria-label={`Edit ${role.name}`}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Link>
-                            </Button>
-                        ) : null}
-                        {can("roles.delete") ? (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                aria-label={`Delete ${role.name}`}
-                                onClick={() => setRoleToDelete(role)}
+            cell: (role) => (
+                <div className="flex items-center justify-end gap-2">
+                    {can("roles.update") ? (
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link
+                                href={edit([team, role.id])}
+                                aria-label={`Edit ${role.name}`}
                             >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        ) : null}
-                    </div>
-                ) : null,
+                                <Pencil className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    ) : null}
+                    {can("roles.delete") ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Delete ${role.name}`}
+                            onClick={() => setRoleToDelete(role)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    ) : null}
+                </div>
+            ),
         },
     ];
 

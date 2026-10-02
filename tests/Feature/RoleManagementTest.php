@@ -58,13 +58,16 @@ test('admin can update and delete a custom role', function () {
     $this->assertModelMissing($role);
 });
 
-test('admin role cannot be modified or deleted', function () {
+test('admin role of the outlet can be modified and deleted', function () {
     $adminRole = Role::findByName('admin');
 
     $this->actingAs($this->admin)
-        ->put(route('roles.update', $adminRole), ['name' => 'admin', 'permissions' => []])
-        ->assertForbidden();
-    $this->actingAs($this->admin)->delete(route('roles.destroy', $adminRole))->assertForbidden();
+        ->put(route('roles.update', $adminRole), ['name' => 'owner', 'permissions' => ['roles.view', 'roles.update', 'roles.delete']])
+        ->assertRedirect(route('roles.index'));
+    expect($adminRole->refresh()->name)->toBe('owner');
+
+    $this->actingAs($this->admin)->delete(route('roles.destroy', $adminRole))->assertRedirect(route('roles.index'));
+    $this->assertModelMissing($adminRole);
 });
 
 test('roles of other outlets are hidden and unmanageable', function () {
@@ -85,8 +88,21 @@ test('created roles are bound to the current outlet', function () {
     expect(Role::where('name', 'auditor')->value('team_id'))->toBe($this->admin->current_team_id);
 });
 
-test('shared default roles cannot be modified from an outlet', function () {
+test('each outlet has its own default roles', function () {
+    $other = Team::factory()->create();
+
+    expect(Role::where('team_id', $this->admin->current_team_id)->pluck('name')->sort()->values()->all())->toBe(['admin', 'cashier', 'manager'])
+        ->and(Role::where('team_id', $other->id)->count())->toBe(3)
+        ->and(Role::whereNull('team_id')->count())->toBe(0);
+});
+
+test('editing a role does not affect the same role of another outlet', function () {
+    $other = Team::factory()->create();
+
     $this->actingAs($this->admin)
         ->put(route('roles.update', Role::findByName('cashier')), ['name' => 'cashier', 'permissions' => []])
-        ->assertForbidden();
+        ->assertRedirect(route('roles.index'));
+
+    $otherCashier = Role::where('team_id', $other->id)->where('name', 'cashier')->sole();
+    expect($otherCashier->hasPermissionTo('sales.create'))->toBeTrue();
 });

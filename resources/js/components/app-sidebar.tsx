@@ -97,16 +97,6 @@ export function AppSidebar() {
             href: dashboardUrl,
             icon: LayoutGrid,
         },
-        ...(masterDataItems.length > 0
-            ? [
-                  {
-                      title: "Master Data",
-                      href: masterDataItems[0].href,
-                      icon: Database,
-                      children: masterDataItems,
-                  },
-              ]
-            : []),
         ...(posItems.length > 0
             ? [
                   {
@@ -114,6 +104,16 @@ export function AppSidebar() {
                       href: posItems[0].href,
                       icon: Package,
                       children: posItems,
+                  },
+              ]
+            : []),
+        ...(masterDataItems.length > 0
+            ? [
+                  {
+                      title: "Master Data",
+                      href: masterDataItems[0].href,
+                      icon: Database,
+                      children: masterDataItems,
                   },
               ]
             : []),

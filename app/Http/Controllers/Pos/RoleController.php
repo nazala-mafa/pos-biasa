@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
 use App\Repositories\RoleRepository;
@@ -16,8 +15,6 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    private const PROTECTED_ROLE = 'admin';
-
     public function __construct(private RoleRepository $roles) {}
 
     /**
@@ -34,7 +31,6 @@ class RoleController extends Controller
                     'name' => $role->name,
                     'usersCount' => $role->users_count,
                     'permissionsCount' => $role->permissions_count,
-                    'isProtected' => $this->isProtected($role),
                     'createdAt' => $role->created_at?->toDateString(),
                 ]),
         ]);
@@ -79,7 +75,6 @@ class RoleController extends Controller
                 'id' => $role->id,
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name'),
-                'isProtected' => $this->isProtected($role),
             ],
             'permissions' => $this->roles->permissionNames(),
         ]);
@@ -91,8 +86,6 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, string $currentTeam, Role $role): RedirectResponse
     {
         $this->ensureVisible($request, $role);
-        abort_if($this->isProtected($role), 403, __('This role cannot be modified.'));
-
         $this->roles->update($role, $request->validated('name'), $request->validated('permissions', []));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated.')]);
@@ -108,8 +101,6 @@ class RoleController extends Controller
         Gate::authorize('roles.delete');
 
         $this->ensureVisible($request, $role);
-        abort_if($this->isProtected($role), 403, __('This role cannot be deleted.'));
-
         $this->roles->delete($role);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted.')]);
@@ -120,13 +111,5 @@ class RoleController extends Controller
     private function ensureVisible(Request $request, Role $role): void
     {
         abort_unless($this->roles->isVisibleTo($request->user()->currentTeam, $role), 404);
-    }
-
-    /**
-     * The admin role and shared default roles are managed outside an outlet.
-     */
-    private function isProtected(Role $role): bool
-    {
-        return $role->name === self::PROTECTED_ROLE || $role->team_id === null;
     }
 }

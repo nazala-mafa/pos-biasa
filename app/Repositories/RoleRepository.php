@@ -11,7 +11,68 @@ use Spatie\Permission\Models\Role;
 class RoleRepository
 {
     /**
-     * Roles of the outlet plus the shared default roles (no outlet), with user and permission counts.
+     * Permissions granted by default to each role of a new outlet. The roles are ordinary and
+     * editable per outlet; full access beyond them belongs to superadmin users only.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const DEFAULT_ROLE_PERMISSIONS = [
+        'admin' => [
+            'products.view', 'products.create', 'products.update', 'products.delete',
+            'customers.view', 'customers.create', 'customers.update',
+            'suppliers.view', 'suppliers.create', 'suppliers.update',
+            'inventory.view', 'inventory.adjust',
+            'sales.view', 'sales.create', 'sales.refund',
+            'reports.view',
+            'categories.view', 'units.view', 'prices.view', 'taxes.view',
+            'users.view', 'users.create', 'users.update', 'users.delete',
+            'roles.view', 'roles.create', 'roles.update', 'roles.delete',
+            'categories.create', 'categories.update', 'categories.delete',
+            'units.create', 'units.update', 'units.delete',
+            'prices.create', 'prices.update', 'prices.delete',
+            'taxes.create', 'taxes.update', 'taxes.delete',
+            'customers.delete', 'suppliers.delete',
+        ],
+        'manager' => [
+            'products.view', 'products.create', 'products.update', 'products.delete',
+            'customers.view', 'customers.create', 'customers.update',
+            'suppliers.view', 'suppliers.create', 'suppliers.update',
+            'inventory.view', 'inventory.adjust',
+            'sales.view', 'sales.create', 'sales.refund',
+            'reports.view',
+            'categories.view', 'units.view', 'prices.view', 'taxes.view',
+        ],
+        'cashier' => [
+            'products.view',
+            'customers.view', 'customers.create',
+            'sales.view', 'sales.create',
+        ],
+    ];
+
+    /**
+     * Create the default admin, manager and cashier roles of the outlet. Existing roles are left untouched.
+     */
+    public function createDefaultsFor(Team $outlet): void
+    {
+        foreach (collect(self::DEFAULT_ROLE_PERMISSIONS)->flatten()->unique() as $permission) {
+            Permission::findOrCreate($permission);
+        }
+
+        foreach (self::DEFAULT_ROLE_PERMISSIONS as $name => $permissions) {
+            $role = Role::firstOrCreate([
+                'name' => $name,
+                'guard_name' => config('auth.defaults.guard'),
+                'team_id' => $outlet->id,
+            ]);
+
+            if ($role->wasRecentlyCreated) {
+                $role->syncPermissions($permissions);
+            }
+        }
+    }
+
+    /**
+     * Roles of the outlet with user and permission counts.
      *
      * @return Collection<int, Role>
      */
@@ -84,6 +145,6 @@ class RoleRepository
     private function visibleQuery(Team $outlet): Builder
     {
         return Role::query()
-            ->where(fn ($query) => $query->whereNull('team_id')->orWhere('team_id', $outlet->id));
+            ->where('team_id', $outlet->id);
     }
 }

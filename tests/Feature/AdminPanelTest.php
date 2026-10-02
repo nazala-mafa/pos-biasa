@@ -21,7 +21,7 @@ test('superadmin can open the admin panel', function () {
 });
 
 test('non superadmin users are forbidden, even with the admin role', function () {
-    $admin = User::factory()->create()->assignRole('admin');
+    $admin = User::factory()->create()->assignRole(testRole('admin'));
 
     $this->actingAs($admin)->get('/admin')->assertForbidden();
 });
@@ -40,7 +40,7 @@ test('superadmin can list outlets', function () {
 });
 
 test('non superadmin users cannot list outlets', function () {
-    $this->actingAs(User::factory()->create()->assignRole('admin'))
+    $this->actingAs(User::factory()->create()->assignRole(testRole('admin')))
         ->get(route('admin.outlets.index'))
         ->assertForbidden();
 });
@@ -60,7 +60,7 @@ test('superadmin can list users with their outlet and role', function () {
     $user = User::factory()->create();
     $outlet->memberships()->create(['user_id' => $user->id, 'role' => 'member']);
     app(PermissionRegistrar::class)->setPermissionsTeamId($outlet->id);
-    $user->assignRole('cashier');
+    $user->assignRole(testRole('cashier'));
 
     $this->actingAs(User::factory()->superadmin()->create())
         ->get(route('admin.users.index'))
@@ -75,7 +75,7 @@ test('superadmin can list users with their outlet and role', function () {
 });
 
 test('non superadmin users cannot list admin users', function () {
-    $this->actingAs(User::factory()->create()->assignRole('admin'))
+    $this->actingAs(User::factory()->create()->assignRole(testRole('admin')))
         ->get(route('admin.users.index'))
         ->assertForbidden();
 });

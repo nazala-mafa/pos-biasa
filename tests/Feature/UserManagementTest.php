@@ -12,7 +12,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->admin = User::factory()->create()->assignRole('admin');
+    $this->admin = User::factory()->create()->assignRole(testRole('admin'));
     $this->outlet = $this->admin->currentTeam;
 });
 
@@ -62,13 +62,15 @@ test('users of other outlets cannot be managed', function () {
 });
 
 test('users without permission are forbidden', function () {
-    $cashier = User::factory()->create()->assignRole('cashier');
+    $cashier = User::factory()->create()->assignRole(testRole('cashier'));
 
     $this->actingAs($cashier)->get(route('users.index'))->assertForbidden();
     $this->actingAs($cashier)->post(route('users.store'), [])->assertForbidden();
 });
 
 test('admin can create a user with roles', function () {
+    testRole('cashier');
+
     $this->actingAs($this->admin)
         ->post(route('users.store'), [
             'name' => 'New Cashier',
@@ -96,7 +98,8 @@ test('user creation validates input', function () {
 });
 
 test('admin can update a user and keep password when blank', function () {
-    $user = outletMember($this->outlet)->assignRole('cashier');
+    $user = outletMember($this->outlet)->assignRole(testRole('cashier'));
+    testRole('manager');
     $originalPassword = $user->password;
 
     $this->actingAs($this->admin)

@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -47,4 +50,41 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Find or create a role of the current permissions team with a preset of permissions.
+ * The app seeds no roles, so tests build the ones they need.
+ */
+function testRole(string $name): Role
+{
+    $presets = [
+        'admin' => [
+            'products.*', 'customers.*', 'suppliers.*', 'inventory.*', 'sales.*', 'reports.view',
+            'categories.*', 'units.*', 'prices.*', 'taxes.*', 'users.*', 'roles.*',
+        ],
+        'manager' => [
+            'products.*', 'customers.view', 'customers.create', 'customers.update',
+            'suppliers.view', 'suppliers.create', 'suppliers.update', 'inventory.*', 'sales.*', 'reports.view',
+            'categories.view', 'units.view', 'prices.view', 'taxes.view',
+        ],
+        'cashier' => ['products.view', 'customers.view', 'customers.create', 'sales.view', 'sales.create'],
+    ];
+
+    $all = Permission::pluck('name');
+    $permissions = $all->filter(fn (string $permission) => collect($presets[$name])->contains(
+        fn (string $pattern) => fnmatch($pattern, $permission),
+    ))->all();
+
+    $role = Role::firstOrCreate([
+        'name' => $name,
+        'guard_name' => config('auth.defaults.guard'),
+        'team_id' => app(PermissionRegistrar::class)->getPermissionsTeamId(),
+    ]);
+
+    if ($role->wasRecentlyCreated) {
+        $role->syncPermissions($permissions);
+    }
+
+    return $role;
 }

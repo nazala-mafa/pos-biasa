@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->admin = User::factory()->create()->assignRole('admin');
+    $this->admin = User::factory()->create()->assignRole(testRole('admin'));
 });
 
 dataset('master data', [
@@ -82,14 +82,14 @@ test('the same name can be used in different outlets', function (string $key, st
 })->with('master data');
 
 test('users without the permission are forbidden', function (string $key) {
-    $cashier = User::factory()->create()->assignRole('cashier');
+    $cashier = User::factory()->create()->assignRole(testRole('cashier'));
 
     $this->actingAs($cashier)->get(route("master-data.{$key}.index"))->assertForbidden();
     $this->actingAs($cashier)->post(route("master-data.{$key}.store"), [])->assertForbidden();
 })->with(['categories', 'units', 'prices', 'taxes']);
 
 test('managers can view but not change master data', function () {
-    $manager = User::factory()->create()->assignRole('manager');
+    $manager = User::factory()->create()->assignRole(testRole('manager'));
 
     $this->actingAs($manager)->get(route('master-data.taxes.index'))->assertOk();
     $this->actingAs($manager)

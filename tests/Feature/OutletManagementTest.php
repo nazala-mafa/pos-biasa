@@ -31,7 +31,7 @@ test('superadmin can list outlets', function () {
 });
 
 test('non superadmin users cannot manage outlets, even with the admin role', function () {
-    $admin = User::factory()->create()->assignRole('admin');
+    $admin = User::factory()->create()->assignRole(testRole('admin'));
     $outlet = Team::factory()->create();
 
     $this->actingAs($admin)->get(route('admin.outlets.index'))->assertForbidden();
@@ -178,7 +178,7 @@ test('rows with unknown references are skipped', function () {
 test('outlet import requires a spreadsheet file and a superadmin', function () {
     $this->actingAs($this->admin)->post(route('admin.outlets.import', $this->defaultOutlet), [])->assertSessionHasErrors('file');
 
-    $user = User::factory()->create()->assignRole('admin');
+    $user = User::factory()->create()->assignRole(testRole('admin'));
     $this->actingAs($user)->get(route('admin.outlets.export', $this->defaultOutlet))->assertForbidden();
     $this->actingAs($user)->post(route('admin.outlets.import', $this->defaultOutlet), [])->assertForbidden();
 });

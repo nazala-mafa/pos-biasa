@@ -1,6 +1,6 @@
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { Form } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import FormLayout from "@/components/form-layout";
 import InputError from "@/components/input-error";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,9 +9,14 @@ import { Label } from "@/components/ui/label";
 import { index, store, update } from "@/routes/roles";
 import { useTranslation } from "@/hooks/use-translation";
 
+type PermissionGroup = {
+    group: string;
+    menus: { menu: string; permissions: string[] }[];
+};
+
 type Props = {
     role: { id: number; name: string; permissions: string[] } | null;
-    permissions: string[];
+    permissions: PermissionGroup[];
 };
 
 export default function RoleForm({ role, permissions }: Props) {
@@ -19,17 +24,6 @@ export default function RoleForm({ role, permissions }: Props) {
     const team = useCurrentTeamSlug();
     const [selected, setSelected] = useState<string[]>(role?.permissions ?? []);
     const formAction = role ? update.form([team, role.id]) : store.form(team);
-
-    const groups = useMemo(() => {
-        const grouped: Record<string, string[]> = {};
-
-        permissions.forEach((permission) => {
-            const [group] = permission.split(".");
-            (grouped[group] ??= []).push(permission);
-        });
-
-        return grouped;
-    }, [permissions]);
 
     const toggle = (permission: string, checked: boolean) => {
         setSelected((current) =>
@@ -63,38 +57,54 @@ export default function RoleForm({ role, permissions }: Props) {
 
                     <div className="grid gap-4">
                         <Label>{t("Permissions")}</Label>
-                        {Object.entries(groups).map(([group, items]) => (
-                            <div
-                                key={group}
-                                className="space-y-2 rounded-lg border p-4"
-                            >
-                                <div className="text-sm font-medium capitalize">
+                        {permissions.map(({ group, menus }) => (
+                            <div key={group} className="space-y-3">
+                                <div className="text-sm font-semibold">
                                     {t(group)}
                                 </div>
-                                <div className="grid gap-2 sm:grid-cols-2">
-                                    {items.map((permission) => (
-                                        <div
-                                            key={permission}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <Checkbox
-                                                id={permission}
-                                                checked={selected.includes(
-                                                    permission,
-                                                )}
-                                                onCheckedChange={(checked) =>
-                                                    toggle(
-                                                        permission,
-                                                        checked === true,
-                                                    )
-                                                }
-                                            />
-                                            <Label htmlFor={permission} className="capitalize">
-                                                {t(permission.split(".")[1])}
-                                            </Label>
+                                {menus.map(({ menu, permissions: items }) => (
+                                    <div
+                                        key={menu}
+                                        className="space-y-2 rounded-lg border p-4"
+                                    >
+                                        <div className="text-sm font-medium capitalize">
+                                            {t(menu)}
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="grid gap-2 sm:grid-cols-2">
+                                            {items.map((permission) => (
+                                                <div
+                                                    key={permission}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Checkbox
+                                                        id={permission}
+                                                        checked={selected.includes(
+                                                            permission,
+                                                        )}
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) =>
+                                                            toggle(
+                                                                permission,
+                                                                checked === true,
+                                                            )
+                                                        }
+                                                    />
+                                                    <Label
+                                                        htmlFor={permission}
+                                                        className="capitalize"
+                                                    >
+                                                        {t(
+                                                            permission.split(
+                                                                ".",
+                                                            )[1],
+                                                        )}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ))}
                         {selected.map((permission) => (

@@ -45,7 +45,7 @@ class RoleController extends Controller
 
         return Inertia::render('roles/form', [
             'role' => null,
-            'permissions' => $this->roles->permissionNames(),
+            'permissions' => $this->roles->permissionGroups(),
         ]);
     }
 
@@ -76,7 +76,7 @@ class RoleController extends Controller
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name'),
             ],
-            'permissions' => $this->roles->permissionNames(),
+            'permissions' => $this->roles->permissionGroups(),
         ]);
     }
 

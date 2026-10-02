@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Team;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Spatie\Permission\Models\Permission;
@@ -10,67 +11,6 @@ use Spatie\Permission\Models\Role;
 
 class RoleRepository
 {
-    /**
-     * Permissions granted by default to each role of a new outlet. The roles are ordinary and
-     * editable per outlet; full access beyond them belongs to superadmin users only.
-     *
-     * @var array<string, array<int, string>>
-     */
-    public const DEFAULT_ROLE_PERMISSIONS = [
-        'admin' => [
-            'products.view', 'products.create', 'products.update', 'products.delete',
-            'customers.view', 'customers.create', 'customers.update',
-            'suppliers.view', 'suppliers.create', 'suppliers.update',
-            'inventory.view', 'inventory.adjust',
-            'sales.view', 'sales.create', 'sales.refund',
-            'reports.view',
-            'categories.view', 'units.view', 'prices.view', 'taxes.view',
-            'users.view', 'users.create', 'users.update', 'users.delete',
-            'roles.view', 'roles.create', 'roles.update', 'roles.delete',
-            'categories.create', 'categories.update', 'categories.delete',
-            'units.create', 'units.update', 'units.delete',
-            'prices.create', 'prices.update', 'prices.delete',
-            'taxes.create', 'taxes.update', 'taxes.delete',
-            'customers.delete', 'suppliers.delete',
-        ],
-        'manager' => [
-            'products.view', 'products.create', 'products.update', 'products.delete',
-            'customers.view', 'customers.create', 'customers.update',
-            'suppliers.view', 'suppliers.create', 'suppliers.update',
-            'inventory.view', 'inventory.adjust',
-            'sales.view', 'sales.create', 'sales.refund',
-            'reports.view',
-            'categories.view', 'units.view', 'prices.view', 'taxes.view',
-        ],
-        'cashier' => [
-            'products.view',
-            'customers.view', 'customers.create',
-            'sales.view', 'sales.create',
-        ],
-    ];
-
-    /**
-     * Create the default admin, manager and cashier roles of the outlet. Existing roles are left untouched.
-     */
-    public function createDefaultsFor(Team $outlet): void
-    {
-        foreach (collect(self::DEFAULT_ROLE_PERMISSIONS)->flatten()->unique() as $permission) {
-            Permission::findOrCreate($permission);
-        }
-
-        foreach (self::DEFAULT_ROLE_PERMISSIONS as $name => $permissions) {
-            $role = Role::firstOrCreate([
-                'name' => $name,
-                'guard_name' => config('auth.defaults.guard'),
-                'team_id' => $outlet->id,
-            ]);
-
-            if ($role->wasRecentlyCreated) {
-                $role->syncPermissions($permissions);
-            }
-        }
-    }
-
     /**
      * Roles of the outlet with user and permission counts.
      *
@@ -100,11 +40,29 @@ class RoleRepository
     }
 
     /**
-     * @return array<int, string>
+     * Permissions grouped by sidebar group and menu, in sidebar order.
+     *
+     * @return array<int, array{group: string, menus: array<int, array{menu: string, permissions: array<int, string>}>}>
      */
-    public function permissionNames(): array
+    public function permissionGroups(): array
     {
-        return Permission::query()->orderBy('name')->pluck('name')->all();
+        $existing = Permission::query()->pluck('name')->all();
+
+        return collect(RolesAndPermissionsSeeder::PERMISSION_GROUPS)
+            ->map(fn (array $menus, string $group) => [
+                'group' => $group,
+                'menus' => collect($menus)
+                    ->map(fn (array $permissions, string $menu) => [
+                        'menu' => $menu,
+                        'permissions' => array_values(array_intersect($permissions, $existing)),
+                    ])
+                    ->filter(fn (array $menu) => $menu['permissions'] !== [])
+                    ->values()
+                    ->all(),
+            ])
+            ->filter(fn (array $group) => $group['menus'] !== [])
+            ->values()
+            ->all();
     }
 
     public function count(): int

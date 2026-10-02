@@ -14,7 +14,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->admin = User::factory()->create()->assignRole('admin');
+    $this->admin = User::factory()->create()->assignRole(testRole('admin'));
     $this->outletId = $this->admin->current_team_id;
 });
 
@@ -90,7 +90,7 @@ test('sales are listed per outlet and only visible within it', function () {
 });
 
 test('cashier can sell but users without permission cannot open sales', function () {
-    $cashier = User::factory()->create()->assignRole('cashier');
+    $cashier = User::factory()->create()->assignRole(testRole('cashier'));
     $this->actingAs($cashier)->get(route('sales.create'))->assertOk();
 
     $nobody = User::factory()->create();

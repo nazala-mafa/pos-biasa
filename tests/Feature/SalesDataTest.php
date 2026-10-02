@@ -12,7 +12,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
-    $this->admin = User::factory()->create()->assignRole('admin');
+    $this->admin = User::factory()->create()->assignRole(testRole('admin'));
     $this->outletId = $this->admin->current_team_id;
 });
 
@@ -75,7 +75,7 @@ test('product sku must be unique within the outlet and relations must belong to 
 });
 
 test('cashier can view products but not create them', function () {
-    $cashier = User::factory()->create()->assignRole('cashier');
+    $cashier = User::factory()->create()->assignRole(testRole('cashier'));
 
     $this->actingAs($cashier)->get(route('products.index'))->assertOk();
     $this->actingAs($cashier)->post(route('products.store'), [])->assertForbidden();
@@ -127,7 +127,7 @@ test('stock movement rejects products from other outlets and negative stock in',
 });
 
 test('cashier cannot access inventory', function () {
-    $cashier = User::factory()->create()->assignRole('cashier');
+    $cashier = User::factory()->create()->assignRole(testRole('cashier'));
 
     $this->actingAs($cashier)->get(route('inventory.index'))->assertForbidden();
 });

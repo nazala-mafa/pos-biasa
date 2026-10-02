@@ -2,55 +2,86 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MasterData\StoreProductCategoryRequest;
+use App\Http\Requests\MasterData\UpdateProductCategoryRequest;
 use App\Models\ProductCategory;
-use Illuminate\Database\Eloquent\Model;
+use App\Repositories\ProductCategoryRepository;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
-class ProductCategoryController extends MasterDataController
+class ProductCategoryController extends Controller
 {
-    protected function modelClass(): string
+    public function __construct(private ProductCategoryRepository $categories) {}
+
+    public function index(Request $request): Response
     {
-        return ProductCategory::class;
+        Gate::authorize('categories.view');
+
+        return Inertia::render('master-data/categories/index', [
+            'rows' => $this->categories->all($request->user()->currentTeam)
+                ->map(fn (ProductCategory $category) => $this->row($category)),
+        ]);
     }
 
-    protected function permissionPrefix(): string
+    public function create(): Response
     {
-        return 'categories';
+        Gate::authorize('categories.create');
+
+        return Inertia::render('master-data/categories/form', ['record' => null]);
     }
 
-    protected function pagePath(): string
+    public function store(StoreProductCategoryRequest $request): RedirectResponse
     {
-        return 'master-data/categories';
+        $this->categories->create($request->user()->currentTeam, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Category created.')]);
+
+        return to_route('master-data.categories.index');
     }
 
-    protected function routePrefix(): string
+    public function edit(Request $request, string $currentTeam, int $id): Response
     {
-        return 'master-data.categories';
+        Gate::authorize('categories.update');
+
+        return Inertia::render('master-data/categories/form', [
+            'record' => $this->row($this->categories->findOrFail($request->user()->currentTeam, $id)),
+        ]);
     }
 
-    protected function label(): string
+    public function update(UpdateProductCategoryRequest $request, string $currentTeam, int $id): RedirectResponse
     {
-        return 'Category';
+        $this->categories->update($this->categories->findOrFail($request->user()->currentTeam, $id), $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Category updated.')]);
+
+        return to_route('master-data.categories.index');
     }
 
-    protected function rules(Request $request, ?Model $record): array
+    public function destroy(Request $request, string $currentTeam, int $id): RedirectResponse
     {
-        return [
-            'name' => ['required', 'string', 'max:255', $this->uniqueName($request, $record)],
-            'description' => ['nullable', 'string', 'max:1000'],
-        ];
+        Gate::authorize('categories.delete');
+
+        $this->categories->delete($this->categories->findOrFail($request->user()->currentTeam, $id));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Category deleted.')]);
+
+        return to_route('master-data.categories.index');
     }
 
     /**
-     * @param  ProductCategory  $record
+     * @return array<string, mixed>
      */
-    protected function row(Model $record): array
+    private function row(ProductCategory $category): array
     {
         return [
-            'id' => $record->id,
-            'name' => $record->name,
-            'description' => $record->description,
-            'createdAt' => $record->created_at?->toDateString(),
+            'id' => $category->id,
+            'name' => $category->name,
+            'description' => $category->description,
+            'createdAt' => $category->created_at?->toDateString(),
         ];
     }
 }

@@ -1,46 +1,40 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pos;
+
+use App\Http\Controllers\Controller;
 
 use App\Enums\StockMovementType;
+use App\Http\Requests\Inventory\StoreStockMovementRequest;
 use App\Models\Product;
 use App\Models\StockMovement;
-use App\Models\Team;
+use App\Repositories\ProductRepository;
+use App\Repositories\StockMovementRepository;
+use App\Repositories\SupplierRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class InventoryController extends Controller implements HasMiddleware
+class InventoryController extends Controller
 {
-    /**
-     * Get the middleware that should be assigned to the controller.
-     *
-     * @return array<int, Middleware>
-     */
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('permission:inventory.view', only: ['index', 'movements']),
-            new Middleware('permission:inventory.adjust', only: ['create', 'store']),
-        ];
-    }
+    public function __construct(
+        private ProductRepository $products,
+        private SupplierRepository $suppliers,
+        private StockMovementRepository $stockMovements,
+    ) {}
 
     /**
      * Current stock level of every product in the outlet.
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('inventory.view');
+
         return Inertia::render('inventory/index', [
-            'rows' => $this->outlet($request)->products()
-                ->with('unit:id,abbreviation')
-                ->withSum('stockMovements as stock', 'quantity')
-                ->orderBy('name')
-                ->get()
+            'rows' => $this->products->withStock($request->user()->currentTeam)
                 ->map(fn (Product $product) => [
                     'id' => $product->id,
                     'sku' => $product->sku,
@@ -59,12 +53,10 @@ class InventoryController extends Controller implements HasMiddleware
      */
     public function movements(Request $request): Response
     {
+        Gate::authorize('inventory.view');
+
         return Inertia::render('inventory/movements', [
-            'rows' => $this->outlet($request)->stockMovements()
-                ->with(['product:id,sku,name', 'supplier:id,name', 'user:id,name'])
-                ->latest()
-                ->latest('id')
-                ->get()
+            'rows' => $this->stockMovements->history($request->user()->currentTeam)
                 ->map(fn (StockMovement $movement) => [
                     'id' => $movement->id,
                     'product' => $movement->product->name,
@@ -82,38 +74,28 @@ class InventoryController extends Controller implements HasMiddleware
 
     public function create(Request $request): Response
     {
-        $outlet = $this->outlet($request);
+        Gate::authorize('inventory.adjust');
+
+        $outlet = $request->user()->currentTeam;
 
         return Inertia::render('inventory/form', [
-            'products' => $outlet->products()
-                ->where('is_active', true)
-                ->with('unit:id,abbreviation')
-                ->withSum('stockMovements as stock', 'quantity')
-                ->orderBy('name')
-                ->get()
+            'products' => $this->products->withStock($outlet, activeOnly: true)
                 ->map(fn (Product $product) => [
                     'id' => $product->id,
                     'label' => "{$product->sku} - {$product->name}",
                     'unit' => $product->unit?->abbreviation,
                     'stock' => (float) ($product->stock ?? 0),
                 ]),
-            'suppliers' => $outlet->suppliers()->orderBy('name')->get(['id', 'name']),
+            'suppliers' => $this->suppliers->all($outlet)->map->only(['id', 'name'])->values(),
             'types' => collect(StockMovementType::cases())
                 ->map(fn (StockMovementType $type) => ['value' => $type->value, 'label' => $type->label()]),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreStockMovementRequest $request): RedirectResponse
     {
-        $outlet = $this->outlet($request);
-
-        $data = $request->validate([
-            'product_id' => ['required', Rule::exists('products', 'id')->where('team_id', $outlet->id)],
-            'type' => ['required', Rule::enum(StockMovementType::class)],
-            'quantity' => ['required', 'numeric', 'not_in:0', 'between:-9999999999999,9999999999999'],
-            'supplier_id' => ['nullable', Rule::exists('suppliers', 'id')->where('team_id', $outlet->id)],
-            'note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $outlet = $request->user()->currentTeam;
+        $data = $request->validated();
 
         $type = StockMovementType::from($data['type']);
         $quantity = (float) $data['quantity'];
@@ -123,13 +105,13 @@ class InventoryController extends Controller implements HasMiddleware
         }
 
         $delta = $type === StockMovementType::Out ? -$quantity : $quantity;
-        $stock = (float) $outlet->stockMovements()->where('product_id', $data['product_id'])->sum('quantity');
+        $stock = $this->stockMovements->currentStock($outlet, $data['product_id']);
 
         if ($stock + $delta < 0) {
             throw ValidationException::withMessages(['quantity' => __('Insufficient stock. Current stock: :stock.', ['stock' => $stock])]);
         }
 
-        $outlet->stockMovements()->create([
+        $this->stockMovements->create($outlet, [
             'product_id' => $data['product_id'],
             'supplier_id' => $type === StockMovementType::In ? ($data['supplier_id'] ?? null) : null,
             'user_id' => $request->user()->id,
@@ -141,10 +123,5 @@ class InventoryController extends Controller implements HasMiddleware
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Stock movement recorded.')]);
 
         return to_route('inventory.index');
-    }
-
-    private function outlet(Request $request): Team
-    {
-        return $request->user()->currentTeam;
     }
 }

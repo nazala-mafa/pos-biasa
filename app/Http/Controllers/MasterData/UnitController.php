@@ -2,55 +2,86 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MasterData\StoreUnitRequest;
+use App\Http\Requests\MasterData\UpdateUnitRequest;
 use App\Models\Unit;
-use Illuminate\Database\Eloquent\Model;
+use App\Repositories\UnitRepository;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
-class UnitController extends MasterDataController
+class UnitController extends Controller
 {
-    protected function modelClass(): string
+    public function __construct(private UnitRepository $units) {}
+
+    public function index(Request $request): Response
     {
-        return Unit::class;
+        Gate::authorize('units.view');
+
+        return Inertia::render('master-data/units/index', [
+            'rows' => $this->units->all($request->user()->currentTeam)
+                ->map(fn (Unit $unit) => $this->row($unit)),
+        ]);
     }
 
-    protected function permissionPrefix(): string
+    public function create(): Response
     {
-        return 'units';
+        Gate::authorize('units.create');
+
+        return Inertia::render('master-data/units/form', ['record' => null]);
     }
 
-    protected function pagePath(): string
+    public function store(StoreUnitRequest $request): RedirectResponse
     {
-        return 'master-data/units';
+        $this->units->create($request->user()->currentTeam, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Unit created.')]);
+
+        return to_route('master-data.units.index');
     }
 
-    protected function routePrefix(): string
+    public function edit(Request $request, string $currentTeam, int $id): Response
     {
-        return 'master-data.units';
+        Gate::authorize('units.update');
+
+        return Inertia::render('master-data/units/form', [
+            'record' => $this->row($this->units->findOrFail($request->user()->currentTeam, $id)),
+        ]);
     }
 
-    protected function label(): string
+    public function update(UpdateUnitRequest $request, string $currentTeam, int $id): RedirectResponse
     {
-        return 'Unit';
+        $this->units->update($this->units->findOrFail($request->user()->currentTeam, $id), $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Unit updated.')]);
+
+        return to_route('master-data.units.index');
     }
 
-    protected function rules(Request $request, ?Model $record): array
+    public function destroy(Request $request, string $currentTeam, int $id): RedirectResponse
     {
-        return [
-            'name' => ['required', 'string', 'max:255', $this->uniqueName($request, $record)],
-            'abbreviation' => ['required', 'string', 'max:10'],
-        ];
+        Gate::authorize('units.delete');
+
+        $this->units->delete($this->units->findOrFail($request->user()->currentTeam, $id));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Unit deleted.')]);
+
+        return to_route('master-data.units.index');
     }
 
     /**
-     * @param  Unit  $record
+     * @return array<string, mixed>
      */
-    protected function row(Model $record): array
+    private function row(Unit $unit): array
     {
         return [
-            'id' => $record->id,
-            'name' => $record->name,
-            'abbreviation' => $record->abbreviation,
-            'createdAt' => $record->created_at?->toDateString(),
+            'id' => $unit->id,
+            'name' => $unit->name,
+            'abbreviation' => $unit->abbreviation,
+            'createdAt' => $unit->created_at?->toDateString(),
         ];
     }
 }

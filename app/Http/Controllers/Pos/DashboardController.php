@@ -1,27 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pos;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\TeamInvitation;
+use App\Repositories\TeamInvitationRepository;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(private TeamInvitationRepository $invitations) {}
+
     public function __invoke(Request $request): Response
     {
-        $email = strtolower($request->user()->email);
-
-        $pendingInvitations = TeamInvitation::query()
-            ->with(['inviter', 'team'])
-            ->whereRaw('LOWER(email) = ?', [$email])
-            ->whereNull('accepted_at')
-            ->where(fn ($query) => $query
-                ->whereNull('expires_at')
-                ->orWhere('expires_at', '>=', now()))
-            ->latest()
-            ->get()
+        $pendingInvitations = $this->invitations->pendingFor($request->user()->email)
             ->map(fn (TeamInvitation $invitation) => [
                 'code' => $invitation->code,
                 'inviterName' => $invitation->inviter->name,

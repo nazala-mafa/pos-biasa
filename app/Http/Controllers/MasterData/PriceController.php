@@ -2,55 +2,86 @@
 
 namespace App\Http\Controllers\MasterData;
 
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MasterData\StorePriceRequest;
+use App\Http\Requests\MasterData\UpdatePriceRequest;
 use App\Models\Price;
-use Illuminate\Database\Eloquent\Model;
+use App\Repositories\PriceRepository;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
-class PriceController extends MasterDataController
+class PriceController extends Controller
 {
-    protected function modelClass(): string
+    public function __construct(private PriceRepository $prices) {}
+
+    public function index(Request $request): Response
     {
-        return Price::class;
+        Gate::authorize('prices.view');
+
+        return Inertia::render('master-data/prices/index', [
+            'rows' => $this->prices->all($request->user()->currentTeam)
+                ->map(fn (Price $price) => $this->row($price)),
+        ]);
     }
 
-    protected function permissionPrefix(): string
+    public function create(): Response
     {
-        return 'prices';
+        Gate::authorize('prices.create');
+
+        return Inertia::render('master-data/prices/form', ['record' => null]);
     }
 
-    protected function pagePath(): string
+    public function store(StorePriceRequest $request): RedirectResponse
     {
-        return 'master-data/prices';
+        $this->prices->create($request->user()->currentTeam, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Price created.')]);
+
+        return to_route('master-data.prices.index');
     }
 
-    protected function routePrefix(): string
+    public function edit(Request $request, string $currentTeam, int $id): Response
     {
-        return 'master-data.prices';
+        Gate::authorize('prices.update');
+
+        return Inertia::render('master-data/prices/form', [
+            'record' => $this->row($this->prices->findOrFail($request->user()->currentTeam, $id)),
+        ]);
     }
 
-    protected function label(): string
+    public function update(UpdatePriceRequest $request, string $currentTeam, int $id): RedirectResponse
     {
-        return 'Price';
+        $this->prices->update($this->prices->findOrFail($request->user()->currentTeam, $id), $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Price updated.')]);
+
+        return to_route('master-data.prices.index');
     }
 
-    protected function rules(Request $request, ?Model $record): array
+    public function destroy(Request $request, string $currentTeam, int $id): RedirectResponse
     {
-        return [
-            'name' => ['required', 'string', 'max:255', $this->uniqueName($request, $record)],
-            'description' => ['nullable', 'string', 'max:1000'],
-        ];
+        Gate::authorize('prices.delete');
+
+        $this->prices->delete($this->prices->findOrFail($request->user()->currentTeam, $id));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Price deleted.')]);
+
+        return to_route('master-data.prices.index');
     }
 
     /**
-     * @param  Price  $record
+     * @return array<string, mixed>
      */
-    protected function row(Model $record): array
+    private function row(Price $price): array
     {
         return [
-            'id' => $record->id,
-            'name' => $record->name,
-            'description' => $record->description,
-            'createdAt' => $record->created_at?->toDateString(),
+            'id' => $price->id,
+            'name' => $price->name,
+            'description' => $price->description,
+            'createdAt' => $price->created_at?->toDateString(),
         ];
     }
 }

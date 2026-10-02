@@ -12,6 +12,11 @@ class UpdateUserRequest extends FormRequest
 {
     use PasswordValidationRules, ProfileValidationRules;
 
+    public function authorize(): bool
+    {
+        return $this->user()->can('users.update');
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

@@ -10,6 +10,7 @@ use App\Http\Requests\Outlet\ImportOutletRequest;
 use App\Http\Requests\Outlet\StoreOutletRequest;
 use App\Http\Requests\Outlet\UpdateOutletRequest;
 use App\Models\Team;
+use App\Repositories\OutletRepository;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,16 +19,15 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OutletController extends Controller
 {
+    public function __construct(private OutletRepository $outlets) {}
+
     /**
      * Display a listing of outlets.
      */
     public function index(): Response
     {
         return Inertia::render('admin/outlets/index', [
-            'outlets' => Team::query()
-                ->withCount('members')
-                ->orderBy('name')
-                ->get()
+            'outlets' => $this->outlets->allWithMemberCount()
                 ->map(fn (Team $outlet) => [
                     'slug' => $outlet->slug,
                     'name' => $outlet->name,
@@ -51,7 +51,7 @@ class OutletController extends Controller
      */
     public function store(StoreOutletRequest $request): RedirectResponse
     {
-        Team::create(['name' => $request->validated('name')]);
+        $this->outlets->create($request->validated('name'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet created.')]);
 
@@ -63,7 +63,6 @@ class OutletController extends Controller
      */
     public function edit(Team $outlet): Response
     {
-
         return Inertia::render('admin/outlets/form', [
             'outlet' => [
                 'slug' => $outlet->slug,
@@ -80,7 +79,7 @@ class OutletController extends Controller
     {
         abort_if($this->isDefault($outlet), 403, __('The default outlet cannot be modified.'));
 
-        $outlet->update(['name' => $request->validated('name')]);
+        $this->outlets->update($outlet, $request->validated('name'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet updated.')]);
 
@@ -94,13 +93,13 @@ class OutletController extends Controller
     {
         abort_if($this->isDefault($outlet), 403, __('The default outlet cannot be deleted.'));
 
-        if ($outlet->memberships()->exists()) {
+        if ($this->outlets->hasMembers($outlet)) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('Move this outlet\'s users elsewhere before deleting it.')]);
 
             return to_route('admin.outlets.index');
         }
 
-        $outlet->delete();
+        $this->outlets->delete($outlet);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Outlet deleted.')]);
 

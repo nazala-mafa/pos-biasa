@@ -3,22 +3,27 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Team;
-use App\Models\User;
+use App\Repositories\OutletRepository;
+use App\Repositories\RoleRepository;
+use App\Repositories\UserRepository;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private UserRepository $users,
+        private RoleRepository $roles,
+        private OutletRepository $outlets,
+    ) {}
+
     public function __invoke(): Response
     {
         return Inertia::render('admin/dashboard', [
             'stats' => [
-                'users' => User::count(),
-                'superadmins' => User::where('is_superadmin', true)->count(),
-                'roles' => Role::count(),
-                'outlets' => Team::count(),
+                ...$this->users->counts(),
+                'roles' => $this->roles->count(),
+                'outlets' => $this->outlets->count(),
             ],
         ]);
     }

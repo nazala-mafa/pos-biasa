@@ -5,26 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Membership;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\UserRepository;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class UserController extends Controller
 {
+    public function __construct(private UserRepository $users) {}
+
     public function index(): Response
     {
-        $assignedRoles = DB::table('model_has_roles')
-            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->where('model_has_roles.model_type', (new User)->getMorphClass())
-            ->orderBy('roles.name')
-            ->get(['model_has_roles.model_id as user_id', 'model_has_roles.team_id', 'roles.name'])
-            ->groupBy(fn ($row) => $row->user_id.':'.$row->team_id);
+        $assignedRoles = $this->users->assignedRolesByOutlet();
 
-        $users = User::query()
-            ->with(['teamMemberships' => fn ($query) => $query
-                ->with('team:id,name')])
-            ->orderBy('name')
-            ->get()
+        $users = $this->users->allWithOutlets()
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'username' => $user->name,

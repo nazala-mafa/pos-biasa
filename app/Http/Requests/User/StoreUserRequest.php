@@ -12,6 +12,11 @@ class StoreUserRequest extends FormRequest
 {
     use PasswordValidationRules, ProfileValidationRules;
 
+    public function authorize(): bool
+    {
+        return $this->user()->can('users.create');
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

@@ -1,48 +1,34 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pos;
+
+use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
-use App\Models\Team;
-use Illuminate\Database\Eloquent\Builder;
+use App\Repositories\RoleRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class RoleController extends Controller implements HasMiddleware
+class RoleController extends Controller
 {
     private const PROTECTED_ROLE = 'admin';
 
-    /**
-     * Get the middleware that should be assigned to the controller.
-     *
-     * @return array<int, Middleware>
-     */
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('permission:roles.view', only: ['index']),
-            new Middleware('permission:roles.create', only: ['create', 'store']),
-            new Middleware('permission:roles.update', only: ['edit', 'update']),
-            new Middleware('permission:roles.delete', only: ['destroy']),
-        ];
-    }
+    public function __construct(private RoleRepository $roles) {}
 
     /**
      * Display a listing of roles.
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('roles.view');
+
         return Inertia::render('roles/index', [
-            'roles' => $this->visibleRoles($request->user()->currentTeam)
-                ->orderBy('name')
-                ->get()
+            'roles' => $this->roles->visibleTo($request->user()->currentTeam)
                 ->map(fn (Role $role) => [
                     'id' => $role->id,
                     'name' => $role->name,
@@ -59,9 +45,11 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function create(): Response
     {
+        Gate::authorize('roles.create');
+
         return Inertia::render('roles/form', [
             'role' => null,
-            'permissions' => $this->permissionNames(),
+            'permissions' => $this->roles->permissionNames(),
         ]);
     }
 
@@ -70,8 +58,7 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
-        $role = Role::create(['name' => $request->validated('name'), 'team_id' => $request->user()->current_team_id]);
-        $role->syncPermissions($request->validated('permissions', []));
+        $this->roles->create($request->user()->currentTeam, $request->validated('name'), $request->validated('permissions', []));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created.')]);
 
@@ -83,6 +70,8 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function edit(Request $request, string $currentTeam, Role $role): Response
     {
+        Gate::authorize('roles.update');
+
         $this->ensureVisible($request, $role);
 
         return Inertia::render('roles/form', [
@@ -92,7 +81,7 @@ class RoleController extends Controller implements HasMiddleware
                 'permissions' => $role->permissions->pluck('name'),
                 'isProtected' => $this->isProtected($role),
             ],
-            'permissions' => $this->permissionNames(),
+            'permissions' => $this->roles->permissionNames(),
         ]);
     }
 
@@ -104,8 +93,7 @@ class RoleController extends Controller implements HasMiddleware
         $this->ensureVisible($request, $role);
         abort_if($this->isProtected($role), 403, __('This role cannot be modified.'));
 
-        $role->update(['name' => $request->validated('name')]);
-        $role->syncPermissions($request->validated('permissions', []));
+        $this->roles->update($role, $request->validated('name'), $request->validated('permissions', []));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated.')]);
 
@@ -117,31 +105,21 @@ class RoleController extends Controller implements HasMiddleware
      */
     public function destroy(Request $request, string $currentTeam, Role $role): RedirectResponse
     {
+        Gate::authorize('roles.delete');
+
         $this->ensureVisible($request, $role);
         abort_if($this->isProtected($role), 403, __('This role cannot be deleted.'));
 
-        $role->delete();
+        $this->roles->delete($role);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted.')]);
 
         return to_route('roles.index');
     }
 
-    /**
-     * Roles of the given outlet plus the shared default roles (no outlet).
-     *
-     * @return Builder<Role>
-     */
-    private function visibleRoles(Team $outlet): Builder
-    {
-        return Role::query()
-            ->where(fn ($query) => $query->whereNull('team_id')->orWhere('team_id', $outlet->id))
-            ->withCount(['users', 'permissions']);
-    }
-
     private function ensureVisible(Request $request, Role $role): void
     {
-        abort_unless($this->visibleRoles($request->user()->currentTeam)->whereKey($role->id)->exists(), 404);
+        abort_unless($this->roles->isVisibleTo($request->user()->currentTeam, $role), 404);
     }
 
     /**
@@ -150,13 +128,5 @@ class RoleController extends Controller implements HasMiddleware
     private function isProtected(Role $role): bool
     {
         return $role->name === self::PROTECTED_ROLE || $role->team_id === null;
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function permissionNames(): array
-    {
-        return Permission::query()->orderBy('name')->pluck('name')->all();
     }
 }

@@ -3,18 +3,18 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OutletController as AdminOutletController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MasterData\PriceController;
 use App\Http\Controllers\MasterData\ProductCategoryController;
 use App\Http\Controllers\MasterData\TaxController;
 use App\Http\Controllers\MasterData\UnitController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\Pos\CustomerController;
+use App\Http\Controllers\Pos\DashboardController;
+use App\Http\Controllers\Pos\InventoryController;
+use App\Http\Controllers\Pos\ProductController;
+use App\Http\Controllers\Pos\RoleController;
+use App\Http\Controllers\Pos\SupplierController;
+use App\Http\Controllers\Pos\UserController;
 use App\Http\Controllers\Teams\TeamInvitationController;
-use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 

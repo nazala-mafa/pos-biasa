@@ -8,6 +8,11 @@ use Illuminate\Validation\Rule;
 
 class UpdateRoleRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()->can('roles.update');
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

@@ -1,16 +1,10 @@
 import { Link, usePage } from "@inertiajs/react";
 import {
-    BookOpen,
-    Boxes,
     Database,
-    FolderGit2,
     LayoutGrid,
     Package,
     Settings,
     ShieldCheck,
-    Truck,
-    UserRound,
-    Users,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavFooter } from "@/components/nav-footer";
@@ -62,13 +56,40 @@ export function AppSidebar() {
         .filter((item) => permissions.includes(item.permission))
         .map(({ permission: _permission, ...item }) => item);
 
-    const navItem = (
-        permission: string,
-        title: string,
-        href: NavItem["href"],
-        icon: NavItem["icon"],
+    const groupItems = (
+        items: (NavItem & { permission: string })[],
     ): NavItem[] =>
-        permissions.includes(permission) ? [{ title, href, icon }] : [];
+        items
+            .filter((item) => permissions.includes(item.permission))
+            .map(({ permission: _permission, ...item }) => item);
+
+    const posItems = groupItems([
+        {
+            title: "Produk / Barang",
+            href: productsIndex(team),
+            permission: "products.view",
+        },
+        {
+            title: "Pelanggan",
+            href: customersIndex(team),
+            permission: "customers.view",
+        },
+        {
+            title: "Supplier",
+            href: suppliersIndex(team),
+            permission: "suppliers.view",
+        },
+        {
+            title: "Stok / Inventory",
+            href: inventoryIndex(team),
+            permission: "inventory.view",
+        },
+    ]);
+
+    const administrationItems = groupItems([
+        { title: "Users", href: usersIndex(team), permission: "users.view" },
+        { title: "Roles", href: rolesIndex(team), permission: "roles.view" },
+    ]);
 
     const mainNavItems: NavItem[] = [
         {
@@ -76,9 +97,6 @@ export function AppSidebar() {
             href: dashboardUrl,
             icon: LayoutGrid,
         },
-        ...(page.props.auth.user.is_superadmin
-            ? [{ title: "Admin Panel", href: adminDashboard(), icon: Settings }]
-            : []),
         ...(masterDataItems.length > 0
             ? [
                   {
@@ -89,44 +107,32 @@ export function AppSidebar() {
                   },
               ]
             : []),
-        ...navItem(
-            "products.view",
-            "Produk / Barang",
-            productsIndex(team),
-            Package,
-        ),
-        ...navItem(
-            "customers.view",
-            "Pelanggan",
-            customersIndex(team),
-            UserRound,
-        ),
-        ...navItem("suppliers.view", "Supplier", suppliersIndex(team), Truck),
-        ...navItem(
-            "inventory.view",
-            "Stok / Inventory",
-            inventoryIndex(team),
-            Boxes,
-        ),
-        ...(permissions.includes("users.view")
-            ? [{ title: "Users", href: usersIndex(team), icon: Users }]
+        ...(posItems.length > 0
+            ? [
+                  {
+                      title: "POS",
+                      href: posItems[0].href,
+                      icon: Package,
+                      children: posItems,
+                  },
+              ]
             : []),
-        ...(permissions.includes("roles.view")
-            ? [{ title: "Roles", href: rolesIndex(team), icon: ShieldCheck }]
+        ...(administrationItems.length > 0
+            ? [
+                  {
+                      title: "Administration",
+                      href: administrationItems[0].href,
+                      icon: ShieldCheck,
+                      children: administrationItems,
+                  },
+              ]
             : []),
     ];
 
     const footerNavItems: NavItem[] = [
-        {
-            title: "Repository",
-            href: "https://github.com/laravel/react-starter-kit",
-            icon: FolderGit2,
-        },
-        {
-            title: "Documentation",
-            href: "https://laravel.com/docs/starter-kits#react",
-            icon: BookOpen,
-        },
+        ...(page.props.auth.user.is_superadmin
+            ? [{ title: "Admin Panel", href: adminDashboard(), icon: Settings }]
+            : []),
     ];
 
     return (

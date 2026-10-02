@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureTeamMembership
@@ -26,6 +27,7 @@ class EnsureTeamMembership
 
         if ($request->route('current_team') && ! $user->isCurrentTeam($team)) {
             $user->switchTeam($team);
+            app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
         }
 
         return $next($request);

@@ -19,11 +19,16 @@ class RolesAndPermissionsSeeder extends Seeder
         'admin' => [
             'users.view', 'users.create', 'users.update', 'users.delete',
             'roles.view', 'roles.create', 'roles.update', 'roles.delete',
+            'categories.create', 'categories.update', 'categories.delete',
+            'units.create', 'units.update', 'units.delete',
+            'prices.create', 'prices.update', 'prices.delete',
+            'taxes.create', 'taxes.update', 'taxes.delete',
         ],
         'manager' => [
             'products.view', 'products.create', 'products.update', 'products.delete',
             'sales.view', 'sales.create', 'sales.refund',
             'reports.view',
+            'categories.view', 'units.view', 'prices.view', 'taxes.view',
         ],
         'cashier' => [
             'products.view',

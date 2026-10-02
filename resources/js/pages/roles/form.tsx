@@ -1,3 +1,4 @@
+import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { Form, Head, Link } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import Heading from "@/components/heading";
@@ -14,8 +15,9 @@ type Props = {
 };
 
 export default function RoleForm({ role, permissions }: Props) {
+    const team = useCurrentTeamSlug();
     const [selected, setSelected] = useState<string[]>(role?.permissions ?? []);
-    const formAction = role ? update.form(role.id) : store.form();
+    const formAction = role ? update.form([team, role.id]) : store.form(team);
 
     const groups = useMemo(() => {
         const grouped: Record<string, string[]> = {};
@@ -124,7 +126,7 @@ export default function RoleForm({ role, permissions }: Props) {
                                     Save
                                 </Button>
                                 <Button variant="secondary" asChild>
-                                    <Link href={index()}>Cancel</Link>
+                                    <Link href={index(team)}>Cancel</Link>
                                 </Button>
                             </div>
                         </>
@@ -135,6 +137,8 @@ export default function RoleForm({ role, permissions }: Props) {
     );
 }
 
-RoleForm.layout = {
-    breadcrumbs: [{ title: "Roles", href: index() }],
-};
+RoleForm.layout = (props: { currentTeam: { slug: string } | null }) => ({
+    breadcrumbs: [
+        { title: "Roles", href: index(props.currentTeam?.slug ?? "") },
+    ],
+});

@@ -1,3 +1,4 @@
+import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -18,6 +19,7 @@ type RoleRow = {
 };
 
 export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
+    const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
     const [roleToDelete, setRoleToDelete] = useState<RoleRow | null>(null);
 
@@ -63,7 +65,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
                         {can("roles.update") ? (
                             <Button variant="ghost" size="sm" asChild>
                                 <Link
-                                    href={edit(role.id)}
+                                    href={edit([team, role.id])}
                                     aria-label={`Edit ${role.name}`}
                                 >
                                     <Pencil className="h-4 w-4" />
@@ -95,7 +97,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
                 actions={
                     can("roles.create") ? (
                         <Button asChild data-test="roles-new-button">
-                            <Link href={create()}>
+                            <Link href={create(team)}>
                                 <Plus /> New role
                             </Link>
                         </Button>
@@ -111,7 +113,7 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
             <DeleteConfirmModal
                 title="Delete role"
                 name={roleToDelete?.name ?? null}
-                url={roleToDelete ? destroy.url(roleToDelete.id) : null}
+                url={roleToDelete ? destroy.url([team, roleToDelete.id]) : null}
                 open={roleToDelete !== null}
                 onOpenChange={(open) => !open && setRoleToDelete(null)}
             />
@@ -119,6 +121,8 @@ export default function RolesIndex({ roles }: { roles: RoleRow[] }) {
     );
 }
 
-RolesIndex.layout = {
-    breadcrumbs: [{ title: "Roles", href: index() }],
-};
+RolesIndex.layout = (props: { currentTeam: { slug: string } | null }) => ({
+    breadcrumbs: [
+        { title: "Roles", href: index(props.currentTeam?.slug ?? "") },
+    ],
+});

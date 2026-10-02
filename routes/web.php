@@ -4,6 +4,10 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OutletController as AdminOutletController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MasterData\PriceController;
+use App\Http\Controllers\MasterData\ProductCategoryController;
+use App\Http\Controllers\MasterData\TaxController;
+use App\Http\Controllers\MasterData\UnitController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\UserController;
@@ -25,12 +29,21 @@ Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
-    });
 
-Route::middleware(['auth', 'verified'])->prefix('management')->group(function () {
-    Route::resource('users', UserController::class)->except('show');
-    Route::resource('roles', RoleController::class)->except('show');
-});
+        Route::prefix('management')->group(function () {
+            Route::resource('users', UserController::class)->except('show');
+            Route::resource('roles', RoleController::class)->except('show');
+        });
+
+        Route::prefix('master-data')
+            ->name('master-data.')
+            ->group(function () {
+                Route::resource('categories', ProductCategoryController::class)->except('show');
+                Route::resource('units', UnitController::class)->except('show');
+                Route::resource('prices', PriceController::class)->except('show');
+                Route::resource('taxes', TaxController::class)->except('show');
+            });
+    });
 
 Route::middleware(['auth'])->group(function () {
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');

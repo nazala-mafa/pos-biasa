@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Teams\AssignDefaultTeam;
+use App\Enums\TeamRole;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Models\Team;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller implements HasMiddleware
 {
@@ -35,10 +37,10 @@ class UserController extends Controller implements HasMiddleware
     /**
      * Display a listing of users.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('users/index', [
-            'users' => User::query()
+            'users' => $this->outletUsers($request->user()->currentTeam)
                 ->where('is_superadmin', false)
                 ->with('roles:id,name')
                 ->orderBy('name')
@@ -56,30 +58,29 @@ class UserController extends Controller implements HasMiddleware
     /**
      * Show the form for creating a user.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('users/form', [
             'user' => null,
-            'roles' => $this->roleNames(),
+            'roles' => $this->roleNames($request->user()->currentTeam),
         ]);
     }
 
     /**
      * Store a newly created user.
      */
-    public function store(StoreUserRequest $request, AssignDefaultTeam $assignDefaultTeam): RedirectResponse
+    public function store(StoreUserRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request, $assignDefaultTeam) {
+        $outlet = $request->user()->currentTeam;
+
+        DB::transaction(function () use ($request, $outlet) {
             $user = User::create($request->safe()->only(['name', 'email', 'password']));
             $user->forceFill(['email_verified_at' => now()])->save();
 
-            $outlet = $assignDefaultTeam->handle($user);
+            $outlet->memberships()->create(['user_id' => $user->id, 'role' => TeamRole::Member]);
+            $user->switchTeam($outlet);
 
-            $registrar = app(PermissionRegistrar::class);
-            $previousTeamId = $registrar->getPermissionsTeamId();
-            $registrar->setPermissionsTeamId($outlet->id);
             $user->syncRoles($request->validated('roles', []));
-            $registrar->setPermissionsTeamId($previousTeamId);
         });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User created.')]);
@@ -90,8 +91,10 @@ class UserController extends Controller implements HasMiddleware
     /**
      * Show the form for editing a user.
      */
-    public function edit(User $user): Response
+    public function edit(Request $request, string $currentTeam, User $user): Response
     {
+        $this->ensureBelongsToOutlet($request, $user);
+
         return Inertia::render('users/form', [
             'user' => [
                 'id' => $user->id,
@@ -99,15 +102,17 @@ class UserController extends Controller implements HasMiddleware
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name'),
             ],
-            'roles' => $this->roleNames(),
+            'roles' => $this->roleNames($request->user()->currentTeam),
         ]);
     }
 
     /**
      * Update the specified user.
      */
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, string $currentTeam, User $user): RedirectResponse
     {
+        $this->ensureBelongsToOutlet($request, $user);
+
         $user->fill($request->safe()->only(['name', 'email']));
 
         if ($request->filled('password')) {
@@ -123,13 +128,28 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
-     * Remove the specified user.
+     * Remove the user from the current outlet, deleting the account when no other (non-personal) outlet remains.
      */
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, string $currentTeam, User $user): RedirectResponse
     {
-        abort_if($user->is(auth()->user()), 403, __('You cannot delete your own account here.'));
+        $this->ensureBelongsToOutlet($request, $user);
 
-        $user->delete();
+        abort_if($user->is($request->user()), 403, __('You cannot delete your own account here.'));
+
+        $outlet = $request->user()->currentTeam;
+
+        DB::transaction(function () use ($user, $outlet) {
+            $user->roles()->detach();
+            $outlet->memberships()->where('user_id', $user->id)->delete();
+
+            if ($user->current_team_id === $outlet->id) {
+                $user->update(['current_team_id' => $user->fallbackTeam()?->id]);
+            }
+
+            if (! $user->teams()->where('is_personal', false)->exists()) {
+                $user->delete();
+            }
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('User deleted.')]);
 
@@ -137,10 +157,31 @@ class UserController extends Controller implements HasMiddleware
     }
 
     /**
+     * Users that are members of the given outlet.
+     *
+     * @return Builder<User>
+     */
+    private function outletUsers(Team $outlet): Builder
+    {
+        return User::query()->whereHas('teams', fn ($query) => $query->where('teams.id', $outlet->id));
+    }
+
+    private function ensureBelongsToOutlet(Request $request, User $user): void
+    {
+        abort_unless($this->outletUsers($request->user()->currentTeam)->whereKey($user->id)->exists(), 404);
+    }
+
+    /**
+     * Role names assignable within the given outlet: its own roles and the shared defaults.
+     *
      * @return array<int, string>
      */
-    private function roleNames(): array
+    private function roleNames(Team $outlet): array
     {
-        return Role::query()->orderBy('name')->pluck('name')->all();
+        return Role::query()
+            ->where(fn ($query) => $query->whereNull('team_id')->orWhere('team_id', $outlet->id))
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
     }
 }

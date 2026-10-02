@@ -1,6 +1,7 @@
 import { Link, usePage } from "@inertiajs/react";
 import {
     BookOpen,
+    Database,
     FolderGit2,
     LayoutGrid,
     Settings,
@@ -23,6 +24,10 @@ import {
 } from "@/components/ui/sidebar";
 import { dashboard } from "@/routes";
 import { dashboard as adminDashboard } from "@/routes/admin";
+import { index as categoriesIndex } from "@/routes/master-data/categories";
+import { index as pricesIndex } from "@/routes/master-data/prices";
+import { index as taxesIndex } from "@/routes/master-data/taxes";
+import { index as unitsIndex } from "@/routes/master-data/units";
 import { index as rolesIndex } from "@/routes/roles";
 import { index as usersIndex } from "@/routes/users";
 import type { NavItem } from "@/types";
@@ -34,6 +39,20 @@ export function AppSidebar() {
         : "/";
 
     const permissions = page.props.auth.permissions;
+    const team = page.props.currentTeam?.slug ?? "";
+
+    const masterDataItems: NavItem[] = [
+        {
+            title: "Product Category",
+            href: categoriesIndex(team),
+            permission: "categories.view",
+        },
+        { title: "Unit", href: unitsIndex(team), permission: "units.view" },
+        { title: "Price", href: pricesIndex(team), permission: "prices.view" },
+        { title: "Tax", href: taxesIndex(team), permission: "taxes.view" },
+    ]
+        .filter((item) => permissions.includes(item.permission))
+        .map(({ permission: _permission, ...item }) => item);
 
     const mainNavItems: NavItem[] = [
         {
@@ -44,11 +63,21 @@ export function AppSidebar() {
         ...(page.props.auth.user.is_superadmin
             ? [{ title: "Admin Panel", href: adminDashboard(), icon: Settings }]
             : []),
+        ...(masterDataItems.length > 0
+            ? [
+                  {
+                      title: "Master Data",
+                      href: masterDataItems[0].href,
+                      icon: Database,
+                      children: masterDataItems,
+                  },
+              ]
+            : []),
         ...(permissions.includes("users.view")
-            ? [{ title: "Users", href: usersIndex(), icon: Users }]
+            ? [{ title: "Users", href: usersIndex(team), icon: Users }]
             : []),
         ...(permissions.includes("roles.view")
-            ? [{ title: "Roles", href: rolesIndex(), icon: ShieldCheck }]
+            ? [{ title: "Roles", href: rolesIndex(team), icon: ShieldCheck }]
             : []),
     ];
 

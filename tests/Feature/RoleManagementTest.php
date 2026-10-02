@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
@@ -43,7 +45,7 @@ test('role name must be unique', function () {
 });
 
 test('admin can update and delete a custom role', function () {
-    $role = Role::create(['name' => 'temp']);
+    $role = Role::create(['name' => 'temp', 'team_id' => $this->admin->current_team_id]);
 
     $this->actingAs($this->admin)
         ->put(route('roles.update', $role), ['name' => 'temp2', 'permissions' => ['sales.view']])
@@ -63,4 +65,28 @@ test('admin role cannot be modified or deleted', function () {
         ->put(route('roles.update', $adminRole), ['name' => 'admin', 'permissions' => []])
         ->assertForbidden();
     $this->actingAs($this->admin)->delete(route('roles.destroy', $adminRole))->assertForbidden();
+});
+
+test('roles of other outlets are hidden and unmanageable', function () {
+    $other = Role::create(['name' => 'other-outlet', 'team_id' => Team::factory()->create()->id]);
+    URL::defaults(['current_team' => $this->admin->currentTeam->slug]);
+
+    $this->actingAs($this->admin)
+        ->get(route('roles.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('roles', 3));
+
+    $this->actingAs($this->admin)->get(route('roles.edit', $other))->assertNotFound();
+    $this->actingAs($this->admin)->delete(route('roles.destroy', $other))->assertNotFound();
+});
+
+test('created roles are bound to the current outlet', function () {
+    $this->actingAs($this->admin)->post(route('roles.store'), ['name' => 'auditor']);
+
+    expect(Role::where('name', 'auditor')->value('team_id'))->toBe($this->admin->current_team_id);
+});
+
+test('shared default roles cannot be modified from an outlet', function () {
+    $this->actingAs($this->admin)
+        ->put(route('roles.update', Role::findByName('cashier')), ['name' => 'cashier', 'permissions' => []])
+        ->assertForbidden();
 });

@@ -23,7 +23,7 @@ class StoreUserRequest extends FormRequest
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'roles' => ['array'],
-            'roles.*' => ['string', Rule::exists('roles', 'name')],
+            'roles.*' => ['string', Rule::exists('roles', 'name')->where(fn ($query) => $query->whereNull('team_id')->orWhere('team_id', $this->user()->current_team_id))],
         ];
     }
 }

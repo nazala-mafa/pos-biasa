@@ -1,3 +1,4 @@
+import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { Form, Head, Link } from "@inertiajs/react";
 import { useState } from "react";
 import Heading from "@/components/heading";
@@ -14,10 +15,11 @@ type Props = {
 };
 
 export default function UserForm({ user, roles }: Props) {
+    const team = useCurrentTeamSlug();
     const [selectedRoles, setSelectedRoles] = useState<string[]>(
         user?.roles ?? [],
     );
-    const formAction = user ? update.form(user.id) : store.form();
+    const formAction = user ? update.form([team, user.id]) : store.form(team);
 
     const toggleRole = (role: string, checked: boolean) => {
         setSelectedRoles((current) =>
@@ -136,7 +138,7 @@ export default function UserForm({ user, roles }: Props) {
                                     Save
                                 </Button>
                                 <Button variant="secondary" asChild>
-                                    <Link href={index()}>Cancel</Link>
+                                    <Link href={index(team)}>Cancel</Link>
                                 </Button>
                             </div>
                         </>
@@ -147,6 +149,8 @@ export default function UserForm({ user, roles }: Props) {
     );
 }
 
-UserForm.layout = {
-    breadcrumbs: [{ title: "Users", href: index() }],
-};
+UserForm.layout = (props: { currentTeam: { slug: string } | null }) => ({
+    breadcrumbs: [
+        { title: "Users", href: index(props.currentTeam?.slug ?? "") },
+    ],
+});

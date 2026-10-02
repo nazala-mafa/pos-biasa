@@ -1,15 +1,29 @@
 <?php
 
+use App\Enums\TeamRole;
+use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\UserSeeder;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->admin = User::factory()->create()->assignRole('admin');
+    $this->outlet = $this->admin->currentTeam;
 });
+
+function outletMember(Team $outlet, ?User $user = null): User
+{
+    $user ??= User::factory()->create();
+    $outlet->members()->attach($user, ['role' => TeamRole::Member->value]);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($outlet->id);
+    URL::defaults(['current_team' => $outlet->slug]);
+
+    return $user;
+}
 
 test('admin can list users', function () {
     $this->actingAs($this->admin)
@@ -19,12 +33,31 @@ test('admin can list users', function () {
 });
 
 test('superadmins are excluded from the users list', function () {
-    User::factory()->superadmin()->create();
+    outletMember($this->outlet, User::factory()->superadmin()->create());
 
     $this->actingAs($this->admin)
         ->get(route('users.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->has('users', 1));
+});
+
+test('only members of the current outlet are listed', function () {
+    User::factory()->create();
+    outletMember($this->outlet);
+
+    $this->actingAs($this->admin)
+        ->get(route('users.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('users', 2));
+});
+
+test('users of other outlets cannot be managed', function () {
+    $stranger = User::factory()->create();
+    URL::defaults(['current_team' => $this->outlet->slug]);
+
+    $this->actingAs($this->admin)->get(route('users.edit', $stranger))->assertNotFound();
+    $this->actingAs($this->admin)->put(route('users.update', $stranger), ['name' => 'X', 'email' => 'x@example.com'])->assertNotFound();
+    $this->actingAs($this->admin)->delete(route('users.destroy', $stranger))->assertNotFound();
+    $this->assertModelExists($stranger);
 });
 
 test('users without permission are forbidden', function () {
@@ -50,7 +83,8 @@ test('admin can create a user with roles', function () {
     app(PermissionRegistrar::class)->setPermissionsTeamId($user->current_team_id);
 
     expect($user->hasRole('cashier'))->toBeTrue()
-        ->and($user->currentTeam->name)->toBe('POS')
+        ->and($user->current_team_id)->toBe($this->outlet->id)
+        ->and($this->outlet->members()->whereKey($user->id)->exists())->toBeTrue()
         ->and($user->ownedTeams()->count())->toBe(0);
 });
 
@@ -61,7 +95,7 @@ test('user creation validates input', function () {
 });
 
 test('admin can update a user and keep password when blank', function () {
-    $user = User::factory()->create()->assignRole('cashier');
+    $user = outletMember($this->outlet)->assignRole('cashier');
     $originalPassword = $user->password;
 
     $this->actingAs($this->admin)
@@ -82,7 +116,7 @@ test('admin can update a user and keep password when blank', function () {
 });
 
 test('admin can delete another user but not themselves', function () {
-    $user = User::factory()->create();
+    $user = outletMember($this->outlet);
 
     $this->actingAs($this->admin)->delete(route('users.destroy', $user))->assertRedirect(route('users.index'));
     $this->assertModelMissing($user);
@@ -101,6 +135,18 @@ test('superadmin flag grants every permission without a role', function () {
 
 test('regular users do not get superadmin access', function () {
     expect(User::factory()->create()->fresh()->is_superadmin)->toBeFalse();
+});
+
+test('deleting a user keeps the account when they belong to another outlet', function () {
+    $user = outletMember($this->outlet);
+    Team::factory()->create()->members()->attach($user, ['role' => TeamRole::Member->value]);
+    URL::defaults(['current_team' => $this->outlet->slug]);
+
+    $this->actingAs($this->admin)->delete(route('users.destroy', $user))->assertRedirect(route('users.index'));
+
+    $this->assertModelExists($user);
+    expect($this->outlet->members()->whereKey($user->id)->exists())->toBeFalse()
+        ->and($user->fresh()->current_team_id)->not->toBe($this->outlet->id);
 });
 
 test('user seeder creates a superadmin and is idempotent', function () {

@@ -1,3 +1,4 @@
+import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { Head, Link, usePage } from "@inertiajs/react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +18,7 @@ type UserRow = {
 };
 
 export default function UsersIndex({ users }: { users: UserRow[] }) {
+    const team = useCurrentTeamSlug();
     const { auth } = usePage().props;
     const [userToDelete, setUserToDelete] = useState<UserRow | null>(null);
 
@@ -64,7 +66,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                     {can("users.update") ? (
                         <Button variant="ghost" size="sm" asChild>
                             <Link
-                                href={edit(user.id)}
+                                href={edit([team, user.id])}
                                 aria-label={`Edit ${user.name}`}
                             >
                                 <Pencil className="h-4 w-4" />
@@ -96,7 +98,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                 actions={
                     can("users.create") ? (
                         <Button asChild data-test="users-new-button">
-                            <Link href={create()}>
+                            <Link href={create(team)}>
                                 <Plus /> New user
                             </Link>
                         </Button>
@@ -112,7 +114,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
             <DeleteConfirmModal
                 title="Delete user"
                 name={userToDelete?.name ?? null}
-                url={userToDelete ? destroy.url(userToDelete.id) : null}
+                url={userToDelete ? destroy.url([team, userToDelete.id]) : null}
                 open={userToDelete !== null}
                 onOpenChange={(open) => !open && setUserToDelete(null)}
             />
@@ -120,6 +122,8 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
     );
 }
 
-UsersIndex.layout = {
-    breadcrumbs: [{ title: "Users", href: index() }],
-};
+UsersIndex.layout = (props: { currentTeam: { slug: string } | null }) => ({
+    breadcrumbs: [
+        { title: "Users", href: index(props.currentTeam?.slug ?? "") },
+    ],
+});

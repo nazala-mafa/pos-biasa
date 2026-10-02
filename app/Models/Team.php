@@ -96,6 +96,46 @@ class Team extends Model
     }
 
     /**
+     * Get the outlet's master data productCategories.
+     *
+     * @return HasMany<ProductCategory, $this>
+     */
+    public function productCategories(): HasMany
+    {
+        return $this->hasMany(ProductCategory::class);
+    }
+
+    /**
+     * Get the outlet's master data units.
+     *
+     * @return HasMany<Unit, $this>
+     */
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class);
+    }
+
+    /**
+     * Get the outlet's master data taxes.
+     *
+     * @return HasMany<Tax, $this>
+     */
+    public function taxes(): HasMany
+    {
+        return $this->hasMany(Tax::class);
+    }
+
+    /**
+     * Get the outlet's master data prices.
+     *
+     * @return HasMany<Price, $this>
+     */
+    public function prices(): HasMany
+    {
+        return $this->hasMany(Price::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

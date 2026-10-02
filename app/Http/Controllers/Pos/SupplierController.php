@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\Supplier\StoreSupplierRequest;
 use App\Http\Requests\Supplier\UpdateSupplierRequest;
 use App\Models\Supplier;

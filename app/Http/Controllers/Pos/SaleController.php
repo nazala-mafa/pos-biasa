@@ -64,7 +64,7 @@ class SaleController extends Controller
                     'unit' => $product->unit?->abbreviation,
                     'photoUrl' => $product->photoUrl(),
                     'price' => (float) $product->selling_price,
-                    'taxRate' => (float) ($product->tax?->rate ?? 0),
+                    'taxRate' => (float) ($product->tax->rate ?? 0),
                     'stock' => (float) ($product->stock ?? 0),
                 ]),
             'customers' => $this->customers->all($outlet)->map->only(['id', 'name'])->values(),

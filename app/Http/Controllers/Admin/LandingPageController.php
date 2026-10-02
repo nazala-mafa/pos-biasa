@@ -29,11 +29,7 @@ class LandingPageController extends Controller
      */
     public function update(UpdateLandingPageRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $data['footer_text'] ??= '';
-        $data['features'] = array_values($data['features'] ?? []);
-
-        $this->landingPage->save($data);
+        $this->landingPage->save($request->content());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Landing page updated.')]);
 

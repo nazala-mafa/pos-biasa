@@ -14,7 +14,7 @@ use App\Models\Team;
 class ReportRepository
 {
     /**
-     * @return list<array{id: int, date: string, invoice: string, customer: string|null, cashier: string|null, paymentMethod: string|null, itemsCount: int, subtotal: float, discount: float, tax: float, total: float}>
+     * @return array<int, array{id: int, date: string, invoice: string, customer: string|null, cashier: string|null, paymentMethod: string|null, itemsCount: int, subtotal: float, discount: float, tax: float, total: float}>
      */
     public function sales(Team $outlet): array
     {
@@ -41,7 +41,7 @@ class ReportRepository
     }
 
     /**
-     * @return list<array{id: int, date: string, number: string, supplier: string|null, status: string, statusLabel: string, itemsCount: int, total: float}>
+     * @return array<int, array{id: int, date: string, number: string, supplier: string|null, status: string, statusLabel: string, itemsCount: int, total: float}>
      */
     public function purchases(Team $outlet): array
     {
@@ -65,7 +65,7 @@ class ReportRepository
     }
 
     /**
-     * @return list<array{id: int, sku: string, name: string, category: string|null, unit: string|null, stock: float, minStock: float, costPrice: float, stockValue: float, isLow: bool}>
+     * @return array<int, array{id: int, sku: string, name: string, category: string|null, unit: string|null, stock: float, minStock: float, costPrice: float, stockValue: float, isLow: bool}>
      */
     public function stock(Team $outlet): array
     {
@@ -96,7 +96,7 @@ class ReportRepository
     /**
      * Cash ledger: sales are money in, returns and non-cancelled purchases are money out.
      *
-     * @return list<array{id: string, date: string, type: string, reference: string, party: string|null, in: float, out: float}>
+     * @return array<int, array{id: string, date: string, type: string, reference: string, party: string|null, in: float, out: float}>
      */
     public function finance(Team $outlet): array
     {
@@ -144,18 +144,14 @@ class ReportRepository
      * Daily profit and loss. Revenue is sales net of discount and tax; returns reduce revenue
      * and cost of goods is the cost price of the products sold minus the ones returned.
      *
-     * @return list<array{date: string, revenue: float, returns: float, cost: float, profit: float}>
+     * @return array<int, array{date: string, revenue: float, returns: float, cost: float, profit: float}>
      */
     public function profitLoss(Team $outlet): array
     {
-        $days = [];
-        $add = function (string $date, string $field, float $amount) use (&$days): void {
-            $days[$date] ??= ['date' => $date, 'revenue' => 0.0, 'returns' => 0.0, 'cost' => 0.0, 'profit' => 0.0];
-            $days[$date][$field] += $amount;
-        };
+        $revenue = $returns = $cost = [];
 
         foreach ($outlet->sales()->get(['id', 'created_at', 'total', 'tax_total']) as $sale) {
-            $add($sale->created_at->toDateString(), 'revenue', (float) $sale->total - (float) $sale->tax_total);
+            $this->accumulate($revenue, $sale->created_at->toDateString(), (float) $sale->total - (float) $sale->tax_total);
         }
 
         $saleItems = SaleItem::query()
@@ -164,11 +160,11 @@ class ReportRepository
             ->get();
 
         foreach ($saleItems as $item) {
-            $add($item->sale->created_at->toDateString(), 'cost', (float) $item->quantity * (float) ($item->product?->cost_price ?? 0));
+            $this->accumulate($cost, $item->sale->created_at->toDateString(), (float) $item->quantity * (float) ($item->product->cost_price ?? 0));
         }
 
         foreach (SaleReturn::query()->where('team_id', $outlet->id)->get(['id', 'created_at', 'total']) as $return) {
-            $add($return->created_at->toDateString(), 'returns', (float) $return->total);
+            $this->accumulate($returns, $return->created_at->toDateString(), (float) $return->total);
         }
 
         $returnItems = SaleReturnItem::query()
@@ -177,20 +173,32 @@ class ReportRepository
             ->get();
 
         foreach ($returnItems as $item) {
-            $add($item->saleReturn->created_at->toDateString(), 'cost', -(float) $item->quantity * (float) ($item->product?->cost_price ?? 0));
+            $this->accumulate($cost, $item->saleReturn->created_at->toDateString(), -(float) $item->quantity * (float) ($item->product->cost_price ?? 0));
         }
 
-        return collect($days)
-            ->map(function (array $day) {
-                $day['revenue'] = round($day['revenue'], 2);
-                $day['returns'] = round($day['returns'], 2);
-                $day['cost'] = round($day['cost'], 2);
-                $day['profit'] = round($day['revenue'] - $day['returns'] - $day['cost'], 2);
+        $dates = array_values(array_unique([...array_keys($revenue), ...array_keys($returns), ...array_keys($cost)]));
+        rsort($dates);
 
-                return $day;
-            })
-            ->sortByDesc('date')
-            ->values()
-            ->all();
+        return array_map(function (string $date) use ($revenue, $returns, $cost) {
+            $dayRevenue = round($revenue[$date] ?? 0.0, 2);
+            $dayReturns = round($returns[$date] ?? 0.0, 2);
+            $dayCost = round($cost[$date] ?? 0.0, 2);
+
+            return [
+                'date' => $date,
+                'revenue' => $dayRevenue,
+                'returns' => $dayReturns,
+                'cost' => $dayCost,
+                'profit' => round($dayRevenue - $dayReturns - $dayCost, 2),
+            ];
+        }, $dates);
+    }
+
+    /**
+     * @param  array<string, float>  $totals
+     */
+    private function accumulate(array &$totals, string $date, float $amount): void
+    {
+        $totals[$date] = ($totals[$date] ?? 0.0) + $amount;
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
@@ -58,7 +57,7 @@ class UserController extends Controller
     {
         $this->users->createForOutlet(
             $request->user()->currentTeam,
-            $request->safe()->only(['name', 'email', 'password']),
+            ['name' => $request->validated('name'), 'email' => $request->validated('email'), 'password' => $request->validated('password')],
             $request->validated('roles', []),
         );
 
@@ -96,7 +95,7 @@ class UserController extends Controller
 
         $this->users->update(
             $user,
-            $request->safe()->only(['name', 'email']),
+            ['name' => $request->validated('name'), 'email' => $request->validated('email')],
             $request->validated('password'),
             $request->validated('roles', []),
         );

@@ -48,7 +48,7 @@ class UserRepository
     /**
      * Role names assigned per "userId:outletId" key.
      *
-     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, object>>
+     * @return \Illuminate\Support\Collection<int|string, \Illuminate\Support\Collection<int, \stdClass>>
      */
     public function assignedRolesByOutlet(): \Illuminate\Support\Collection
     {

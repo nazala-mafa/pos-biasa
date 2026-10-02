@@ -22,7 +22,7 @@ class GoodsReceiptItemFactory extends Factory
         return [
             'goods_receipt_id' => GoodsReceipt::factory(),
             'purchase_order_item_id' => PurchaseOrderItem::factory(),
-            'product_id' => fn (array $attributes) => PurchaseOrderItem::findOrFail($attributes['purchase_order_item_id'])->product_id,
+            'product_id' => fn (array $attributes) => PurchaseOrderItem::query()->whereKey($attributes['purchase_order_item_id'])->firstOrFail()->product_id,
             'quantity' => fake()->numberBetween(1, 10),
         ];
     }

@@ -63,7 +63,7 @@ class UserController extends Controller
 
         $user = $this->users->createForOutlet(
             $outlet,
-            $request->safe()->only(['name', 'email', 'password']),
+            ['name' => $request->validated('name'), 'email' => $request->validated('email'), 'password' => $request->validated('password')],
             $request->validated('roles', []),
             $verified,
         );
@@ -100,7 +100,7 @@ class UserController extends Controller
     {
         $this->users->updateAccount(
             $user,
-            $request->safe()->only(['name', 'email']),
+            ['name' => $request->validated('name'), 'email' => $request->validated('email')],
             $request->validated('password'),
         );
 

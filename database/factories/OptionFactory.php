@@ -30,14 +30,17 @@ class OptionFactory extends Factory
 
     public function forTeam(?Team $team = null): static
     {
-        return $this->state(fn () => ['team_id' => $team?->id ?? Team::factory()]);
+        return $this->state(fn () => ['team_id' => $team->id ?? Team::factory()]);
     }
 
     public function forUser(?User $user = null): static
     {
-        return $this->state(fn () => ['user_id' => $user?->id ?? User::factory()]);
+        return $this->state(fn () => ['user_id' => $user->id ?? User::factory()]);
     }
 
+    /**
+     * @param  array<string, mixed>  $value
+     */
     public function json(array $value = ['theme' => 'dark']): static
     {
         return $this->state(fn () => ['value' => json_encode($value), 'is_json' => true]);

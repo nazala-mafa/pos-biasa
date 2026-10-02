@@ -25,7 +25,7 @@ class PurchaseOrderItemFactory extends Factory
         return [
             'purchase_order_id' => PurchaseOrder::factory(),
             'product_id' => fn (array $attributes) => Product::factory()->create([
-                'team_id' => PurchaseOrder::findOrFail($attributes['purchase_order_id'])->team_id,
+                'team_id' => PurchaseOrder::query()->whereKey($attributes['purchase_order_id'])->firstOrFail()->team_id,
             ])->id,
             'quantity' => $quantity,
             'received_quantity' => 0,

@@ -12,6 +12,8 @@ use App\Models\StockMovement;
 use App\Models\Team;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Lang;
+use stdClass;
 
 class DashboardRepository
 {
@@ -61,6 +63,7 @@ class DashboardRepository
     {
         $row = $outlet->sales()
             ->where('created_at', '>=', $start)
+            ->toBase()
             ->selectRaw('COALESCE(SUM(total), 0) as sales, COUNT(*) as transactions, COALESCE(SUM(paid - `change`), 0) as cash_in, COALESCE(SUM(CASE WHEN total > paid THEN total - paid ELSE 0 END), 0) as receivables')
             ->first();
 
@@ -73,7 +76,7 @@ class DashboardRepository
     }
 
     /**
-     * @return list<array{date: string, label: string, total: float, transactions: int}>
+     * @return array<int, array{date: string, label: string, total: float, transactions: int}>
      */
     private function chart(Team $outlet, CarbonInterface $start, int $days): array
     {
@@ -98,7 +101,7 @@ class DashboardRepository
     }
 
     /**
-     * @return list<array{id: int, cashier: string|null, openedAt: string, openingCash: float, salesTotal: float, salesCount: int}>
+     * @return array<int, array{id: int, cashier: string|null, openedAt: string, openingCash: float, salesTotal: float, salesCount: int}>
      */
     private function openShifts(Team $outlet): array
     {
@@ -121,7 +124,7 @@ class DashboardRepository
     }
 
     /**
-     * @return list<array{id: int, invoice: string, customer: string|null, cashier: string|null, total: float, createdAt: string}>
+     * @return array<int, array{id: int, invoice: string, customer: string|null, cashier: string|null, total: float, createdAt: string}>
      */
     private function recentSales(Team $outlet): array
     {
@@ -143,7 +146,7 @@ class DashboardRepository
     }
 
     /**
-     * @return list<array{productId: int|null, name: string, quantity: float, revenue: float}>
+     * @return array<int, array{productId: int|null, name: string, quantity: float, revenue: float}>
      */
     private function topProducts(Team $outlet, CarbonInterface $start): array
     {
@@ -152,12 +155,13 @@ class DashboardRepository
             ->where('sales.team_id', $outlet->id)
             ->where('sales.created_at', '>=', $start)
             ->groupBy('sale_items.product_id', 'sale_items.name')
+            ->toBase()
             ->selectRaw('sale_items.product_id, sale_items.name, SUM(sale_items.quantity) as quantity, SUM(sale_items.subtotal) as revenue')
             ->orderByDesc('quantity')
             ->limit(5)
             ->get()
-            ->map(fn (SaleItem $item) => [
-                'productId' => $item->product_id,
+            ->map(fn (stdClass $item) => [
+                'productId' => $item->product_id !== null ? (int) $item->product_id : null,
                 'name' => $item->name,
                 'quantity' => (float) $item->quantity,
                 'revenue' => (float) $item->revenue,
@@ -168,7 +172,7 @@ class DashboardRepository
     /**
      * Active products at or under their minimum stock, emptiest first.
      *
-     * @return array{count: int, items: list<array{id: int, name: string, sku: string, stock: float, minStock: float, unit: string|null}>}
+     * @return array{count: int, items: array<int, array{id: int, name: string, sku: string, stock: float, minStock: float, unit: string|null}>}
      */
     private function lowStock(Team $outlet): array
     {
@@ -197,30 +201,30 @@ class DashboardRepository
     /**
      * The latest shift, return, purchase and stock events merged into one timeline.
      *
-     * @return list<array{type: string, title: string, detail: string|null, at: string}>
+     * @return array<int, array{type: string, title: string, detail: string|null, at: string}>
      */
     private function activities(Team $outlet): array
     {
-        /** @var Collection<int, array{type: string, title: string, detail: string|null, at: Carbon}> $events */
+        /** @var Collection<int, array{type: string, title: string, detail: string|null, at: CarbonInterface}> $events */
         $events = collect();
 
         $outlet->cashierShifts()->with('user:id,name')->latest('opened_at')->limit(5)->get()
             ->each(function (CashierShift $shift) use ($events) {
-                $events->push(['type' => 'shift', 'title' => __(':user opened a shift', ['user' => $shift->user?->name ?? '-']), 'detail' => null, 'at' => $shift->opened_at]);
+                $events->push(['type' => 'shift', 'title' => Lang::string(':user opened a shift', ['user' => $shift->user->name ?? '-']), 'detail' => null, 'at' => $shift->opened_at]);
 
                 if ($shift->closed_at !== null) {
-                    $events->push(['type' => 'shift', 'title' => __(':user closed a shift', ['user' => $shift->user?->name ?? '-']), 'detail' => null, 'at' => $shift->closed_at]);
+                    $events->push(['type' => 'shift', 'title' => Lang::string(':user closed a shift', ['user' => $shift->user->name ?? '-']), 'detail' => null, 'at' => $shift->closed_at]);
                 }
             });
 
         $outlet->saleReturns()->with('sale:id,invoice_number')->latest()->limit(5)->get()
-            ->each(fn (SaleReturn $return) => $events->push(['type' => 'return', 'title' => __('Return :number', ['number' => $return->number]), 'detail' => $return->sale?->invoice_number, 'at' => $return->created_at]));
+            ->each(fn (SaleReturn $return) => $events->push(['type' => 'return', 'title' => Lang::string('Return :number', ['number' => $return->number]), 'detail' => $return->sale?->invoice_number, 'at' => $return->created_at]));
 
         $outlet->purchaseOrders()->with('supplier:id,name')->latest()->limit(5)->get()
-            ->each(fn (PurchaseOrder $order) => $events->push(['type' => 'purchase', 'title' => __('Purchase order :number', ['number' => $order->number]), 'detail' => $order->supplier?->name, 'at' => $order->created_at]));
+            ->each(fn (PurchaseOrder $order) => $events->push(['type' => 'purchase', 'title' => Lang::string('Purchase order :number', ['number' => $order->number]), 'detail' => $order->supplier?->name, 'at' => $order->created_at]));
 
         $outlet->stockMovements()->with('product:id,name')->where('type', '!=', 'out')->latest()->limit(5)->get()
-            ->each(fn (StockMovement $movement) => $events->push(['type' => 'stock', 'title' => $movement->type->label().': '.($movement->product?->name ?? '-'), 'detail' => $movement->quantity > 0 ? '+'.(float) $movement->quantity : (string) (float) $movement->quantity, 'at' => $movement->created_at]));
+            ->each(fn (StockMovement $movement) => $events->push(['type' => 'stock', 'title' => $movement->type->label().': '.($movement->product->name ?? '-'), 'detail' => $movement->quantity > 0 ? '+'.(float) $movement->quantity : (string) (float) $movement->quantity, 'at' => $movement->created_at]));
 
         return $events
             ->sortByDesc('at')

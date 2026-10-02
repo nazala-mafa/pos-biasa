@@ -52,7 +52,7 @@ class OutletDataImport implements Import, SkipsUnknownSheets, WithMultipleSheets
             ->all();
     }
 
-    public function onUnknownSheet($sheetName): void
+    public function onUnknownSheet(mixed $sheetName): void
     {
         //
     }
@@ -591,7 +591,7 @@ class OutletDataImport implements Import, SkipsUnknownSheets, WithMultipleSheets
         }
 
         $subtotal = round((float) $data['unit_price'] * (float) $data['quantity'], 2);
-        $taxRate = (float) ($product->tax?->rate ?? 0);
+        $taxRate = (float) ($product->tax->rate ?? 0);
 
         $sale->items()->updateOrCreate(['sku' => $product->sku], [
             'product_id' => $product->id,
@@ -772,8 +772,8 @@ class OutletDataImport implements Import, SkipsUnknownSheets, WithMultipleSheets
     private function stamp(Model $model, ?Carbon $date): Model
     {
         if ($date !== null) {
-            $model->created_at = $date;
-            $model->updated_at = $date;
+            $model->setCreatedAt($date);
+            $model->setUpdatedAt($date);
         }
 
         return $model;

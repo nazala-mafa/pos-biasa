@@ -103,12 +103,12 @@ class OutletDataExport implements Export, WithMultipleSheets
             'stock_movements' => $this->outlet->stockMovements()->with(['product', 'supplier'])->orderBy('id')->get()
                 ->map(fn (StockMovement $row) => [$row->created_at?->format('Y-m-d H:i:s'), $row->product?->sku, $row->supplier?->name, $row->type->value, (float) $row->quantity, $row->note])->all(),
             'purchase_orders' => $this->outlet->purchaseOrders()->with('supplier')->orderBy('number')->get()
-                ->map(fn (PurchaseOrder $row) => [$row->number, $row->supplier?->name, $row->status->value, $row->ordered_at?->toDateString(), $row->expected_at?->toDateString(), $row->note])->all(),
+                ->map(fn (PurchaseOrder $row) => [$row->number, $row->supplier?->name, $row->status->value, $row->ordered_at->toDateString(), $row->expected_at?->toDateString(), $row->note])->all(),
             'purchase_order_items' => PurchaseOrderItem::whereHas('purchaseOrder', fn ($query) => $query->where('team_id', $this->outlet->id))
                 ->with(['purchaseOrder', 'product'])->orderBy('id')->get()
                 ->map(fn (PurchaseOrderItem $row) => [$row->purchaseOrder->number, $row->product?->sku, (float) $row->quantity, (float) $row->received_quantity, (float) $row->unit_cost])->all(),
             'goods_receipts' => $this->outlet->goodsReceipts()->with('purchaseOrder')->orderBy('number')->get()
-                ->map(fn (GoodsReceipt $row) => [$row->number, $row->purchaseOrder?->number, $row->received_at?->toDateString(), $row->note])->all(),
+                ->map(fn (GoodsReceipt $row) => [$row->number, $row->purchaseOrder?->number, $row->received_at->toDateString(), $row->note])->all(),
             'goods_receipt_items' => GoodsReceiptItem::whereHas('goodsReceipt', fn ($query) => $query->where('team_id', $this->outlet->id))
                 ->with(['goodsReceipt', 'product'])->orderBy('id')->get()
                 ->map(fn (GoodsReceiptItem $row) => [$row->goodsReceipt->number, $row->product?->sku, (float) $row->quantity])->all(),
@@ -123,10 +123,11 @@ class OutletDataExport implements Export, WithMultipleSheets
                 ->with(['saleReturn', 'saleItem'])->orderBy('id')->get()
                 ->map(fn (SaleReturnItem $row) => [$row->saleReturn->number, $row->saleItem?->sku, (float) $row->quantity])->all(),
             'stock_opnames' => $this->outlet->stockOpnames()->orderBy('number')->get()
-                ->map(fn (StockOpname $row) => [$row->number, $row->counted_at?->toDateString(), $row->note])->all(),
+                ->map(fn (StockOpname $row) => [$row->number, $row->counted_at->toDateString(), $row->note])->all(),
             'stock_opname_items' => StockOpnameItem::whereHas('stockOpname', fn ($query) => $query->where('team_id', $this->outlet->id))
                 ->with(['stockOpname', 'product'])->orderBy('id')->get()
                 ->map(fn (StockOpnameItem $row) => [$row->stockOpname->number, $row->product?->sku, (float) $row->system_quantity, (float) $row->counted_quantity])->all(),
+            default => [],
         };
     }
 }

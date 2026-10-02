@@ -22,7 +22,7 @@ class StockOpnameItemFactory extends Factory
         return [
             'stock_opname_id' => StockOpname::factory(),
             'product_id' => fn (array $attributes) => Product::factory()->create([
-                'team_id' => StockOpname::findOrFail($attributes['stock_opname_id'])->team_id,
+                'team_id' => StockOpname::query()->whereKey($attributes['stock_opname_id'])->firstOrFail()->team_id,
             ])->id,
             'system_quantity' => 10,
             'counted_quantity' => 8,

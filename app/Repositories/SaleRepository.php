@@ -80,7 +80,7 @@ class SaleRepository
                 }
 
                 $lineSubtotal = round((float) $product->selling_price * $quantity, 2);
-                $taxRate = (float) ($product->tax?->rate ?? 0);
+                $taxRate = (float) ($product->tax->rate ?? 0);
                 $taxAmount = round($lineSubtotal * $taxRate / 100, 2);
 
                 $subtotal += $lineSubtotal;

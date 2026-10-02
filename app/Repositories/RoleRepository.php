@@ -6,6 +6,7 @@ use App\Models\Team;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use LogicException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -76,6 +77,11 @@ class RoleRepository
     public function create(Team $outlet, string $name, array $permissions): Role
     {
         $role = Role::create(['name' => $name, 'team_id' => $outlet->id]);
+
+        if (! $role instanceof Role) {
+            throw new LogicException('The configured role model must extend '.Role::class.'.');
+        }
+
         $role->syncPermissions($permissions);
 
         return $role;

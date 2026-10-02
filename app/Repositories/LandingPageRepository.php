@@ -22,8 +22,17 @@ class LandingPageRepository
     public function content(): array
     {
         $saved = Option::get(self::OPTION_KEY, []);
+        $saved = is_array($saved) ? $saved : [];
+        $defaults = $this->defaults();
 
-        return [...$this->defaults(), ...(is_array($saved) ? $saved : [])];
+        return [
+            'brand_name' => $this->text($saved['brand_name'] ?? null, $defaults['brand_name']),
+            'hero_title' => $this->text($saved['hero_title'] ?? null, $defaults['hero_title']),
+            'hero_subtitle' => $this->text($saved['hero_subtitle'] ?? null, $defaults['hero_subtitle']),
+            'cta_label' => $this->text($saved['cta_label'] ?? null, $defaults['cta_label']),
+            'footer_text' => $this->text($saved['footer_text'] ?? null, $defaults['footer_text']),
+            'features' => $this->features($saved['features'] ?? null, $defaults['features']),
+        ];
     }
 
     /**
@@ -32,6 +41,37 @@ class LandingPageRepository
     public function save(array $content): void
     {
         Option::put(self::OPTION_KEY, $content);
+    }
+
+    /**
+     * Fall back to the default when a saved value is missing or not a string.
+     */
+    private function text(mixed $value, string $default): string
+    {
+        return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Keep only well formed saved features, falling back to the defaults when none was saved.
+     *
+     * @param  list<Feature>  $default
+     * @return list<Feature>
+     */
+    private function features(mixed $value, array $default): array
+    {
+        if (! is_array($value)) {
+            return $default;
+        }
+
+        $features = [];
+
+        foreach ($value as $feature) {
+            if (is_array($feature) && is_string($feature['title'] ?? null) && is_string($feature['description'] ?? null)) {
+                $features[] = ['title' => $feature['title'], 'description' => $feature['description']];
+            }
+        }
+
+        return $features;
     }
 
     /**

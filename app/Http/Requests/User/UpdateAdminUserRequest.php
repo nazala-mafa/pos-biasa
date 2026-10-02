@@ -4,6 +4,7 @@ namespace App\Http\Requests\User;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -19,8 +20,20 @@ class UpdateAdminUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            ...$this->profileRules($this->route('user')->id),
+            ...$this->profileRules($this->routeUser()->id),
             'password' => ['nullable', ...array_slice($this->passwordRules(), 1)],
         ];
+    }
+
+    /**
+     * Get the user bound to the route.
+     */
+    private function routeUser(): User
+    {
+        $user = $this->route('user');
+
+        abort_if(! $user instanceof User, 404);
+
+        return $user;
     }
 }

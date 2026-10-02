@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Outlet;
 
+use App\Models\Team;
 use App\Rules\TeamName;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -19,8 +20,20 @@ class UpdateOutletRequest extends FormRequest
         return [
             'name' => [
                 'required', 'string', 'max:255', new TeamName,
-                Rule::unique('teams', 'name')->whereNull('deleted_at')->ignore($this->route('outlet')->id),
+                Rule::unique('teams', 'name')->whereNull('deleted_at')->ignore($this->routeOutlet()->id),
             ],
         ];
+    }
+
+    /**
+     * Get the outlet bound to the route.
+     */
+    private function routeOutlet(): Team
+    {
+        $outlet = $this->route('outlet');
+
+        abort_if(! $outlet instanceof Team, 404);
+
+        return $outlet;
     }
 }

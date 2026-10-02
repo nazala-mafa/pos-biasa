@@ -49,7 +49,7 @@ abstract class OutletScopedRepository
      */
     public function create(Team $outlet, array $data): Model
     {
-        return $this->modelClass()::create([...$data, 'team_id' => $outlet->id]);
+        return $this->modelClass()::query()->create([...$data, 'team_id' => $outlet->id]);
     }
 
     /**

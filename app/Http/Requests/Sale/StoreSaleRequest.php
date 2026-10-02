@@ -33,4 +33,16 @@ class StoreSaleRequest extends FormRequest
             'note' => ['nullable', 'string', 'max:255'],
         ];
     }
+
+    /**
+     * The validated input, shaped for the repository that persists it.
+     *
+     * @param  array<array-key, mixed>|int|string|null  $key
+     * @param  mixed  $default
+     * @return array{customer_id?: int|null, payment_method_id: int, discount?: float|int|string|null, paid: float|int|string, note?: string|null, items: array<int, array{product_id: int, quantity: float|int|string}>}
+     */
+    public function validated($key = null, $default = null)
+    {
+        return parent::validated($key, $default);
+    }
 }

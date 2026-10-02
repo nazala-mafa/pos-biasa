@@ -23,17 +23,17 @@ class MasterDataSeeder extends Seeder
         $outlet = Team::where('name', AssignDefaultTeam::NAME)->first();
 
         if ($outlet === null || ! is_file($path)) {
-            $this->command?->warn('Skipped: POS outlet or '.self::FILE.' not found.');
+            $this->command->warn('Skipped: POS outlet or '.self::FILE.' not found.');
 
             return;
         }
 
         $import = $importOutletData->handle($outlet, $path);
 
-        $this->command?->info("Imported {$import->total()} row(s) into the POS outlet.");
+        $this->command->info("Imported {$import->total()} row(s) into the POS outlet.");
 
         foreach ($import->failures as $failure) {
-            $this->command?->warn($failure);
+            $this->command->warn($failure);
         }
     }
 }

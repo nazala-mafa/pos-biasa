@@ -30,4 +30,16 @@ class ReceivePurchaseOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
         ];
     }
+
+    /**
+     * The validated input, shaped for the repository that persists it.
+     *
+     * @param  array<array-key, mixed>|int|string|null  $key
+     * @param  mixed  $default
+     * @return array{received_at: string, note?: string|null, items: array<int, array{purchase_order_item_id: int, quantity: float|int|string}>}
+     */
+    public function validated($key = null, $default = null)
+    {
+        return parent::validated($key, $default);
+    }
 }

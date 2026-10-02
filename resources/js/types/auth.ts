@@ -7,11 +7,13 @@ export type User = {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    is_superadmin?: boolean;
     [key: string]: unknown;
 };
 
 export type Auth = {
     user: User;
+    permissions: string[];
 };
 
 export type Passkey = {

@@ -11,10 +11,15 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     /**
      * Permissions grouped by the roles that receive them.
+     * The admin role always receives every permission; its entry lists admin-only ones.
      *
      * @var array<string, array<int, string>>
      */
     private const ROLE_PERMISSIONS = [
+        'admin' => [
+            'users.view', 'users.create', 'users.update', 'users.delete',
+            'roles.view', 'roles.create', 'roles.update', 'roles.delete',
+        ],
         'manager' => [
             'products.view', 'products.create', 'products.update', 'products.delete',
             'sales.view', 'sales.create', 'sales.refund',
@@ -41,7 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Role::findOrCreate('admin')->syncPermissions($allPermissions->all());
 
-        foreach (self::ROLE_PERMISSIONS as $role => $permissions) {
+        foreach (collect(self::ROLE_PERMISSIONS)->except('admin') as $role => $permissions) {
             Role::findOrCreate($role)->syncPermissions($permissions);
         }
     }

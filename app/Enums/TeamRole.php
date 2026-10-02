@@ -2,6 +2,15 @@
 
 namespace App\Enums;
 
+/**
+ * Outlet-level role. It has no permission map (no RBAC); fine-grained
+ * permissions are managed by spatie/laravel-permission.
+ *
+ * - Owner: full access to their own outlet.
+ * - Admin: can access every outlet.
+ * - Member: bound to specific outlets and limited by the spatie permissions
+ *   of the roles assigned to them.
+ */
 enum TeamRole: string
 {
     case Owner = 'owner';
@@ -14,32 +23,6 @@ enum TeamRole: string
     public function label(): string
     {
         return ucfirst($this->value);
-    }
-
-    /**
-     * Get all the permissions for this role.
-     *
-     * @return array<TeamPermission>
-     */
-    public function permissions(): array
-    {
-        return match ($this) {
-            self::Owner => TeamPermission::cases(),
-            self::Admin => [
-                TeamPermission::UpdateTeam,
-                TeamPermission::CreateInvitation,
-                TeamPermission::CancelInvitation,
-            ],
-            self::Member => [],
-        };
-    }
-
-    /**
-     * Determine if the role has the given permission.
-     */
-    public function hasPermission(TeamPermission $permission): bool
-    {
-        return in_array($permission, $this->permissions());
     }
 
     /**

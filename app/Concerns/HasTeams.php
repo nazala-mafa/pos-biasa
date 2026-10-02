@@ -4,7 +4,6 @@ namespace App\Concerns;
 
 use App\Data\TeamPermissions;
 use App\Data\UserTeam;
-use App\Enums\TeamPermission;
 use App\Enums\TeamRole;
 use App\Models\Membership;
 use App\Models\Team;
@@ -165,16 +164,17 @@ trait HasTeams
      */
     public function toTeamPermissions(Team $team): TeamPermissions
     {
-        $role = $this->teamRole($team);
+        $isOwner = $this->ownsTeam($team);
+        $isManager = $this->isTeamManager($team);
 
         return new TeamPermissions(
-            canUpdateTeam: $role?->hasPermission(TeamPermission::UpdateTeam) ?? false,
-            canDeleteTeam: $role?->hasPermission(TeamPermission::DeleteTeam) ?? false,
-            canAddMember: $role?->hasPermission(TeamPermission::AddMember) ?? false,
-            canUpdateMember: $role?->hasPermission(TeamPermission::UpdateMember) ?? false,
-            canRemoveMember: $role?->hasPermission(TeamPermission::RemoveMember) ?? false,
-            canCreateInvitation: $role?->hasPermission(TeamPermission::CreateInvitation) ?? false,
-            canCancelInvitation: $role?->hasPermission(TeamPermission::CancelInvitation) ?? false,
+            canUpdateTeam: $isManager,
+            canDeleteTeam: $isOwner,
+            canAddMember: $isOwner,
+            canUpdateMember: $isOwner,
+            canRemoveMember: $isOwner,
+            canCreateInvitation: $isManager,
+            canCancelInvitation: $isManager,
         );
     }
 
@@ -187,10 +187,10 @@ trait HasTeams
     }
 
     /**
-     * Determine if the user has the given permission on the team.
+     * Determine if the user is an owner or admin of the given team.
      */
-    public function hasTeamPermission(Team $team, TeamPermission $permission): bool
+    public function isTeamManager(Team $team): bool
     {
-        return $this->teamRole($team)?->hasPermission($permission) ?? false;
+        return $this->teamRole($team)?->isAtLeast(TeamRole::Admin) ?? false;
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Pos\DashboardController;
 use App\Http\Controllers\Pos\InventoryController;
 use App\Http\Controllers\Pos\ProductController;
 use App\Http\Controllers\Pos\RoleController;
+use App\Http\Controllers\Pos\SaleController;
 use App\Http\Controllers\Pos\SupplierController;
 use App\Http\Controllers\Pos\UserController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -40,6 +41,7 @@ Route::prefix('{current_team}')
         Route::resource('products', ProductController::class)->except('show');
         Route::resource('customers', CustomerController::class)->except('show');
         Route::resource('suppliers', SupplierController::class)->except('show');
+        Route::resource('sales', SaleController::class)->only(['index', 'create', 'store', 'show']);
 
         Route::prefix('inventory')
             ->name('inventory.')

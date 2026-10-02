@@ -1,3 +1,4 @@
+import { ImageIcon } from "lucide-react";
 import MasterDataIndex from "@/components/master-data-index";
 import type { MasterDataRow } from "@/components/master-data-index";
 import type { DataTableColumn } from "@/components/data-table";
@@ -7,6 +8,7 @@ import { formatCurrency } from "@/lib/format";
 import { create, destroy, edit, index } from "@/routes/products";
 
 type Row = MasterDataRow & {
+    photoUrl: string | null;
     sku: string;
     category: string | null;
     unit: string | null;
@@ -17,6 +19,22 @@ type Row = MasterDataRow & {
 };
 
 const extraColumns: DataTableColumn<Row>[] = [
+    {
+        id: "photo",
+        header: "Photo",
+        cell: (row) =>
+            row.photoUrl ? (
+                <img
+                    src={row.photoUrl}
+                    alt={row.name}
+                    className="h-10 w-10 rounded-md object-cover"
+                />
+            ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                </div>
+            ),
+    },
     {
         id: "sku",
         header: "SKU",

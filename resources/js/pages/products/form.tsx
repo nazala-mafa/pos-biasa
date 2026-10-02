@@ -1,5 +1,6 @@
 import { Form } from "@inertiajs/react";
-import { useState } from "react";
+import { ImageIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import FormLayout, { SidebarCard } from "@/components/form-layout";
 import InputError from "@/components/input-error";
 import NativeSelect from "@/components/native-select";
@@ -17,6 +18,7 @@ type Props = {
         sku: string;
         name: string;
         description: string | null;
+        photoUrl: string | null;
         categoryId: number | null;
         unitId: number | null;
         taxId: number | null;
@@ -38,6 +40,20 @@ export default function ProductsForm({
 }: Props) {
     const team = useCurrentTeamSlug();
     const [isActive, setIsActive] = useState(record?.isActive ?? true);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [removePhoto, setRemovePhoto] = useState(false);
+    const currentPhotoUrl = removePhoto ? null : (record?.photoUrl ?? null);
+    const shownPhotoUrl = previewUrl ?? currentPhotoUrl;
+
+    useEffect(
+        () => () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        },
+        [previewUrl],
+    );
+
     const formAction = record
         ? update.form([team, record.id])
         : store.form(team);
@@ -70,60 +86,129 @@ export default function ProductsForm({
                         </div>
                     }
                     sidebar={
-                        <SidebarCard title="Classification">
-                            <div className="grid gap-2">
-                                <Label htmlFor="product_category_id">
-                                    Category
-                                </Label>
-                                <NativeSelect
-                                    id="product_category_id"
-                                    name="product_category_id"
-                                    defaultValue={record?.categoryId ?? ""}
-                                >
-                                    <option value="">-</option>
-                                    {categories.map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name}
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                <InputError
-                                    message={errors.product_category_id}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="unit_id">Unit</Label>
-                                <NativeSelect
-                                    id="unit_id"
-                                    name="unit_id"
-                                    defaultValue={record?.unitId ?? ""}
-                                >
-                                    <option value="">-</option>
-                                    {units.map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name} ({item.abbreviation})
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                <InputError message={errors.unit_id} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="tax_id">Tax</Label>
-                                <NativeSelect
-                                    id="tax_id"
-                                    name="tax_id"
-                                    defaultValue={record?.taxId ?? ""}
-                                >
-                                    <option value="">-</option>
-                                    {taxes.map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.name} ({item.rate}%)
-                                        </option>
-                                    ))}
-                                </NativeSelect>
-                                <InputError message={errors.tax_id} />
-                            </div>
-                        </SidebarCard>
+                        <>
+                            <SidebarCard title="Photo">
+                                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-muted">
+                                    {shownPhotoUrl ? (
+                                        <img
+                                            src={shownPhotoUrl}
+                                            alt={
+                                                record?.name ?? "Product photo"
+                                            }
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                                    )}
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="photo">Upload photo</Label>
+                                    <Input
+                                        id="photo"
+                                        name="photo"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(event) => {
+                                            const file =
+                                                event.target.files?.[0];
+
+                                            setPreviewUrl(
+                                                file
+                                                    ? URL.createObjectURL(file)
+                                                    : null,
+                                            );
+                                        }}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        JPG, PNG or WebP, max 2 MB.
+                                    </p>
+                                    <InputError message={errors.photo} />
+                                </div>
+                                {record?.photoUrl ? (
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id="remove_photo_checkbox"
+                                            checked={removePhoto}
+                                            onCheckedChange={(checked) =>
+                                                setRemovePhoto(checked === true)
+                                            }
+                                        />
+                                        <Label htmlFor="remove_photo_checkbox">
+                                            Remove current photo
+                                        </Label>
+                                        <input
+                                            type="hidden"
+                                            name="remove_photo"
+                                            value={removePhoto ? "1" : "0"}
+                                        />
+                                    </div>
+                                ) : null}
+                            </SidebarCard>
+                            <SidebarCard title="Classification">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="product_category_id">
+                                        Category
+                                    </Label>
+                                    <NativeSelect
+                                        id="product_category_id"
+                                        name="product_category_id"
+                                        defaultValue={record?.categoryId ?? ""}
+                                    >
+                                        <option value="">-</option>
+                                        {categories.map((item) => (
+                                            <option
+                                                key={item.id}
+                                                value={item.id}
+                                            >
+                                                {item.name}
+                                            </option>
+                                        ))}
+                                    </NativeSelect>
+                                    <InputError
+                                        message={errors.product_category_id}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="unit_id">Unit</Label>
+                                    <NativeSelect
+                                        id="unit_id"
+                                        name="unit_id"
+                                        defaultValue={record?.unitId ?? ""}
+                                    >
+                                        <option value="">-</option>
+                                        {units.map((item) => (
+                                            <option
+                                                key={item.id}
+                                                value={item.id}
+                                            >
+                                                {item.name} ({item.abbreviation}
+                                                )
+                                            </option>
+                                        ))}
+                                    </NativeSelect>
+                                    <InputError message={errors.unit_id} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="tax_id">Tax</Label>
+                                    <NativeSelect
+                                        id="tax_id"
+                                        name="tax_id"
+                                        defaultValue={record?.taxId ?? ""}
+                                    >
+                                        <option value="">-</option>
+                                        {taxes.map((item) => (
+                                            <option
+                                                key={item.id}
+                                                value={item.id}
+                                            >
+                                                {item.name} ({item.rate}%)
+                                            </option>
+                                        ))}
+                                    </NativeSelect>
+                                    <InputError message={errors.tax_id} />
+                                </div>
+                            </SidebarCard>
+                        </>
                     }
                 >
                     <div className="grid gap-2">

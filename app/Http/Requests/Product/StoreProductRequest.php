@@ -26,6 +26,8 @@ class StoreProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:64', $this->uniqueInOutlet('products', 'sku')],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_photo' => ['nullable', 'boolean'],
             'product_category_id' => ['nullable', $this->existsInOutlet('product_categories')],
             'unit_id' => ['nullable', $this->existsInOutlet('units')],
             'tax_id' => ['nullable', $this->existsInOutlet('taxes')],

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\Product;
@@ -111,6 +110,7 @@ class ProductController extends Controller
             'sku' => $product->sku,
             'name' => $product->name,
             'description' => $product->description,
+            'photoUrl' => $product->photoUrl(),
             'categoryId' => $product->product_category_id,
             'category' => $product->productCategory?->name,
             'unitId' => $product->unit_id,

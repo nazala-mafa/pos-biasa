@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -16,7 +17,7 @@ class Product extends Model
     /**
      * @var list<string>
      */
-    protected $fillable = ['team_id', 'product_category_id', 'unit_id', 'tax_id', 'sku', 'name', 'description', 'cost_price', 'selling_price', 'min_stock', 'is_active'];
+    protected $fillable = ['team_id', 'product_category_id', 'unit_id', 'tax_id', 'sku', 'name', 'description', 'photo_path', 'cost_price', 'selling_price', 'min_stock', 'is_active'];
 
     /**
      * @return array<string, string>
@@ -29,6 +30,14 @@ class Product extends Model
             'min_stock' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Public URL of the product photo, or null when it has none.
+     */
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path ? Storage::disk('public')->url($this->photo_path) : null;
     }
 
     /**

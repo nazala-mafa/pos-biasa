@@ -25,6 +25,7 @@ import { dashboard as adminDashboard } from "@/routes/admin";
 import { index as customersIndex } from "@/routes/customers";
 import { index as inventoryIndex } from "@/routes/inventory";
 import { index as productsIndex } from "@/routes/products";
+import { index as salesIndex } from "@/routes/sales";
 import { index as suppliersIndex } from "@/routes/suppliers";
 import { index as categoriesIndex } from "@/routes/master-data/categories";
 import { index as pricesIndex } from "@/routes/master-data/prices";
@@ -64,6 +65,11 @@ export function AppSidebar() {
             .map(({ permission: _permission, ...item }) => item);
 
     const posItems = groupItems([
+        {
+            title: "Penjualan",
+            href: salesIndex(team),
+            permission: "sales.view",
+        },
         {
             title: "Produk / Barang",
             href: productsIndex(team),

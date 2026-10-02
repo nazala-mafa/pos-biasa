@@ -172,6 +172,14 @@ class Team extends Model
     }
 
     /**
+     * @return HasMany<Sale, $this>
+     */
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

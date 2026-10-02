@@ -5,6 +5,11 @@ set -e
 
 cd /var/www/html
 
+# One-off commands (docker run ... php artisan ...) skip the app preparation.
+if [ "$1" != "supervisord" ]; then
+    exec "$@"
+fi
+
 mkdir -p \
     storage/app/public \
     storage/framework/cache/data \

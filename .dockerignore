@@ -6,6 +6,7 @@ bootstrap/ssr
 public/build
 public/hot
 public/storage
+bootstrap/cache/*.php
 resources/js/actions
 resources/js/routes
 resources/js/wayfinder

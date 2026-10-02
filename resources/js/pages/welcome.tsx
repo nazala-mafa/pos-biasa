@@ -28,7 +28,7 @@ export default function Welcome({ content }: Props) {
                 <header className="border-b">
                     <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
                         <span className="flex items-center gap-2 font-semibold">
-                            <AppLogoIcon className="size-6 fill-current" />
+                            <AppLogoIcon className="size-6" />
                             {content.brand_name}
                         </span>
                         <div className="flex items-center gap-2">

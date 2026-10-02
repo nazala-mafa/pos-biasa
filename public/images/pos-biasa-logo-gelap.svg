@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><title>Pos Biasa</title>
+  <rect width="512" height="512" rx="112" fill="#1F2A44"/>
+  <path d="M136 112q0-20 20-20h200q20 0 20 20V404L356 424L336 404L316 424L296 404L276 424L256 404L236 424L216 404L196 424L176 404L156 424L136 404Z" fill="#F2B233"/>
+  <rect x="186" y="140" width="44" height="170" rx="6" fill="#1F2A44"/>
+  <path fill-rule="evenodd" fill="#1F2A44" d="M224 140H268a52 52 0 0 1 0 104H224ZM230 172H264a20 20 0 0 1 0 40H230Z"/>
+  <rect x="186" y="336" width="140" height="14" rx="7" fill="#1F2A44" opacity=".25"/>
+  <rect x="186" y="364" width="96" height="14" rx="7" fill="#2E8B57"/>
+</svg>

@@ -26,7 +26,7 @@
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: oklch(0.2 0.035 265);
             }
         </style>
 
@@ -39,7 +39,7 @@
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ config('app.name', 'POS Biasa') }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

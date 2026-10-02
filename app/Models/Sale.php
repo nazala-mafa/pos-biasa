@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\PaymentMethod;
 use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +16,7 @@ class Sale extends Model
     /**
      * @var list<string>
      */
-    protected $fillable = ['team_id', 'customer_id', 'user_id', 'invoice_number', 'payment_method', 'subtotal', 'discount', 'tax_total', 'total', 'paid', 'change', 'note'];
+    protected $fillable = ['team_id', 'customer_id', 'user_id', 'cashier_shift_id', 'invoice_number', 'payment_method_id', 'payment_method', 'subtotal', 'discount', 'tax_total', 'total', 'paid', 'change', 'note'];
 
     /**
      * @return array<string, string|class-string>
@@ -25,7 +24,6 @@ class Sale extends Model
     protected function casts(): array
     {
         return [
-            'payment_method' => PaymentMethod::class,
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
             'tax_total' => 'decimal:2',
@@ -61,6 +59,30 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<CashierShift, $this>
+     */
+    public function cashierShift(): BelongsTo
+    {
+        return $this->belongsTo(CashierShift::class);
+    }
+
+    /**
+     * @return BelongsTo<PaymentMethod, $this>
+     */
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+    /**
+     * @return HasMany<SaleReturn, $this>
+     */
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
     }
 
     /**

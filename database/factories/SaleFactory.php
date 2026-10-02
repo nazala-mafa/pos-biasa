@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\PaymentMethod;
 use App\Models\Sale;
 use App\Models\Team;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,7 +23,7 @@ class SaleFactory extends Factory
         return [
             'team_id' => Team::factory(),
             'invoice_number' => 'INV-'.fake()->unique()->numerify('########-####'),
-            'payment_method' => PaymentMethod::Cash,
+            'payment_method' => 'Cash',
             'subtotal' => $total,
             'discount' => 0,
             'tax_total' => 0,

@@ -44,6 +44,12 @@ class Team extends Model
             }
         });
 
+        static::created(function (Team $team) {
+            foreach (PaymentMethod::DEFAULTS as $method) {
+                $team->paymentMethods()->create($method);
+            }
+        });
+
         static::updating(function (Team $team) {
             if ($team->isDirty('name')) {
                 $team->slug = static::generateUniqueTeamSlug($team->name, $team->id);
@@ -172,6 +178,54 @@ class Team extends Model
     public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
+    }
+
+    /**
+     * @return HasMany<PaymentMethod, $this>
+     */
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    /**
+     * @return HasMany<PurchaseOrder, $this>
+     */
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
+    /**
+     * @return HasMany<GoodsReceipt, $this>
+     */
+    public function goodsReceipts(): HasMany
+    {
+        return $this->hasMany(GoodsReceipt::class);
+    }
+
+    /**
+     * @return HasMany<CashierShift, $this>
+     */
+    public function cashierShifts(): HasMany
+    {
+        return $this->hasMany(CashierShift::class);
+    }
+
+    /**
+     * @return HasMany<SaleReturn, $this>
+     */
+    public function saleReturns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
+    }
+
+    /**
+     * @return HasMany<StockOpname, $this>
+     */
+    public function stockOpnames(): HasMany
+    {
+        return $this->hasMany(StockOpname::class);
     }
 
     /**

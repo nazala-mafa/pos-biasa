@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Enums\PaymentMethod;
 use App\Enums\StockMovementType;
 use App\Models\Sale;
 use App\Models\Team;
@@ -37,13 +36,19 @@ class SaleRepository
      * Record a sale: price the lines from the current product prices, take the sold quantities
      * out of stock and store the invoice, all in one transaction.
      *
-     * @param  array{customer_id?: int|null, payment_method: string, discount?: float|int|string|null, paid: float|int|string, note?: string|null, items: array<int, array{product_id: int, quantity: float|int|string}>}  $data
+     * @param  array{customer_id?: int|null, payment_method_id: int, discount?: float|int|string|null, paid: float|int|string, note?: string|null, items: array<int, array{product_id: int, quantity: float|int|string}>}  $data
      *
      * @throws ValidationException
      */
     public function checkout(Team $outlet, User $cashier, array $data): Sale
     {
         return DB::transaction(function () use ($outlet, $cashier, $data) {
+            $paymentMethod = $outlet->paymentMethods()->where('is_active', true)->find($data['payment_method_id']);
+
+            if ($paymentMethod === null) {
+                throw ValidationException::withMessages(['payment_method_id' => __('The selected payment method is not available.')]);
+            }
+
             $quantities = [];
             foreach ($data['items'] as $item) {
                 $quantities[$item['product_id']] = ($quantities[$item['product_id']] ?? 0) + (float) $item['quantity'];
@@ -110,8 +115,10 @@ class SaleRepository
             $sale = $outlet->sales()->create([
                 'customer_id' => $data['customer_id'] ?? null,
                 'user_id' => $cashier->id,
+                'cashier_shift_id' => $outlet->cashierShifts()->where('user_id', $cashier->id)->whereNull('closed_at')->value('id'),
                 'invoice_number' => $this->nextInvoiceNumber($outlet),
-                'payment_method' => PaymentMethod::from($data['payment_method']),
+                'payment_method_id' => $paymentMethod->id,
+                'payment_method' => $paymentMethod->name,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'tax_total' => $taxTotal,

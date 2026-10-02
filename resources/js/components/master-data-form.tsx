@@ -1,15 +1,17 @@
 import { Form } from "@inertiajs/react";
+import { useState } from "react";
 import FormLayout from "@/components/form-layout";
 import type { PageSize } from "@/components/page-container";
 import InputError from "@/components/input-error";
 import { useTranslation } from "@/hooks/use-translation";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export type MasterDataField = {
     name: string;
     label: string;
-    type?: "text" | "number" | "email" | "textarea";
+    type?: "text" | "number" | "email" | "textarea" | "checkbox";
     step?: string;
     required?: boolean;
 };
@@ -24,6 +26,38 @@ type Props = {
     updateForm: ((id: number) => object) | null;
     size?: PageSize;
 };
+
+function CheckboxField({
+    field,
+    defaultChecked,
+    error,
+}: {
+    field: MasterDataField;
+    defaultChecked: boolean;
+    error?: string;
+}) {
+    const { t } = useTranslation();
+    const [checked, setChecked] = useState(defaultChecked);
+
+    return (
+        <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+                <Checkbox
+                    id={field.name}
+                    checked={checked}
+                    onCheckedChange={(value) => setChecked(value === true)}
+                />
+                <Label htmlFor={field.name}>{t(field.label)}</Label>
+                <input
+                    type="hidden"
+                    name={field.name}
+                    value={checked ? "1" : "0"}
+                />
+            </div>
+            <InputError message={error} />
+        </div>
+    );
+}
 
 export default function MasterDataForm({
     title,
@@ -54,6 +88,19 @@ export default function MasterDataForm({
                     {fields.map((field) => {
                         const defaultValue = record?.[field.name] as
                             string | number | null | undefined;
+
+                        if (field.type === "checkbox") {
+                            return (
+                                <CheckboxField
+                                    key={field.name}
+                                    field={field}
+                                    defaultChecked={
+                                        record ? Boolean(record[field.name]) : true
+                                    }
+                                    error={errors[field.name]}
+                                />
+                            );
+                        }
 
                         return (
                             <div key={field.name} className="grid gap-2">

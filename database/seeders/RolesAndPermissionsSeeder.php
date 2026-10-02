@@ -18,10 +18,14 @@ class RolesAndPermissionsSeeder extends Seeder
     public const PERMISSION_GROUPS = [
         'POS' => [
             'sales' => ['sales.view', 'sales.create', 'sales.refund'],
+            'returns' => ['returns.view', 'returns.create'],
+            'shifts' => ['shifts.view', 'shifts.open', 'shifts.close'],
             'products' => ['products.view', 'products.create', 'products.update', 'products.delete'],
             'customers' => ['customers.view', 'customers.create', 'customers.update', 'customers.delete'],
             'suppliers' => ['suppliers.view', 'suppliers.create', 'suppliers.update', 'suppliers.delete'],
+            'purchases' => ['purchases.view', 'purchases.create', 'purchases.receive', 'purchases.cancel'],
             'inventory' => ['inventory.view', 'inventory.adjust'],
+            'stock-opnames' => ['stock-opnames.view', 'stock-opnames.create'],
             'reports' => ['reports.view'],
         ],
         'Master Data' => [
@@ -29,6 +33,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'units' => ['units.view', 'units.create', 'units.update', 'units.delete'],
             'prices' => ['prices.view', 'prices.create', 'prices.update', 'prices.delete'],
             'taxes' => ['taxes.view', 'taxes.create', 'taxes.update', 'taxes.delete'],
+            'payment-methods' => ['payment-methods.view', 'payment-methods.create', 'payment-methods.update', 'payment-methods.delete'],
         ],
         'Administration' => [
             'users' => ['users.view', 'users.create', 'users.update', 'users.delete'],

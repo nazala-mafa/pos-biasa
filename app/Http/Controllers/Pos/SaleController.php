@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Pos;
 
-use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sale\StoreSaleRequest;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -36,8 +36,7 @@ class SaleController extends Controller
                     'invoiceNumber' => $sale->invoice_number,
                     'customer' => $sale->customer?->name,
                     'user' => $sale->user?->name,
-                    'paymentMethod' => $sale->payment_method->value,
-                    'paymentLabel' => $sale->payment_method->label(),
+                    'paymentLabel' => $sale->payment_method,
                     'itemsCount' => $sale->items_count,
                     'total' => (float) $sale->total,
                     'createdAt' => $sale->created_at?->toDateString(),
@@ -69,8 +68,8 @@ class SaleController extends Controller
                     'stock' => (float) ($product->stock ?? 0),
                 ]),
             'customers' => $this->customers->all($outlet)->map->only(['id', 'name'])->values(),
-            'paymentMethods' => collect(PaymentMethod::cases())
-                ->map(fn (PaymentMethod $method) => ['value' => $method->value, 'label' => $method->label()]),
+            'paymentMethods' => $outlet->paymentMethods()->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                ->map(fn (PaymentMethod $method) => ['value' => (string) $method->id, 'label' => $method->name]),
         ]);
     }
 
@@ -95,7 +94,7 @@ class SaleController extends Controller
                 'invoiceNumber' => $sale->invoice_number,
                 'customer' => $sale->customer?->name,
                 'user' => $sale->user?->name,
-                'paymentLabel' => $sale->payment_method->label(),
+                'paymentLabel' => $sale->payment_method,
                 'subtotal' => (float) $sale->subtotal,
                 'discount' => (float) $sale->discount,
                 'taxTotal' => (float) $sale->tax_total,

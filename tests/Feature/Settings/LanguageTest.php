@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\PaymentMethod;
+use App\Enums\PurchaseOrderStatus;
 use App\Models\Option;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -64,5 +64,5 @@ test('validation errors and enum labels are translated for the user', function (
 
     app()->setLocale('id');
 
-    expect(PaymentMethod::Cash->label())->toBe('Tunai');
+    expect(PurchaseOrderStatus::Partial->label())->toBe('Diterima sebagian');
 });

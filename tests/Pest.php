@@ -62,13 +62,15 @@ function testRole(string $name): Role
         'admin' => [
             'products.*', 'customers.*', 'suppliers.*', 'inventory.*', 'sales.*', 'reports.view',
             'categories.*', 'units.*', 'prices.*', 'taxes.*', 'users.*', 'roles.*',
+            'returns.*', 'shifts.*', 'purchases.*', 'stock-opnames.*', 'payment-methods.*',
         ],
         'manager' => [
             'products.*', 'customers.view', 'customers.create', 'customers.update',
             'suppliers.view', 'suppliers.create', 'suppliers.update', 'inventory.*', 'sales.*', 'reports.view',
             'categories.view', 'units.view', 'prices.view', 'taxes.view',
+            'returns.*', 'shifts.*', 'purchases.*', 'stock-opnames.*', 'payment-methods.view',
         ],
-        'cashier' => ['products.view', 'customers.view', 'customers.create', 'sales.view', 'sales.create'],
+        'cashier' => ['products.view', 'customers.view', 'customers.create', 'sales.view', 'sales.create', 'shifts.view', 'shifts.open', 'shifts.close'],
     ];
 
     $all = Permission::pluck('name');

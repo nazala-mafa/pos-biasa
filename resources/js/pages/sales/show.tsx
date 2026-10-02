@@ -1,10 +1,11 @@
-import { Head, Link } from "@inertiajs/react";
-import { ArrowLeft } from "lucide-react";
+import { Head, Link, usePage } from "@inertiajs/react";
+import { ArrowLeft, Undo2 } from "lucide-react";
 import PageContainer from "@/components/page-container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentTeamSlug } from "@/hooks/use-current-team-slug";
 import { formatCurrency, formatQuantity } from "@/lib/format";
+import { create as createReturn } from "@/routes/returns";
 import { index } from "@/routes/sales";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -38,6 +39,7 @@ type Props = {
 export default function SalesShow({ sale }: Props) {
     const { t } = useTranslation();
     const team = useCurrentTeamSlug();
+    const { auth } = usePage().props;
 
     const summary: [string, string, boolean?][] = [
         ["Subtotal", formatCurrency(sale.subtotal)],
@@ -65,11 +67,24 @@ export default function SalesShow({ sale }: Props) {
                                 {t("Cashier")}: {sale.user ?? "-"}
                             </p>
                         </div>
-                        <Button variant="outline" asChild>
-                            <Link href={index(team).url}>
-                                <ArrowLeft /> {t("Sales")}
-                            </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                            {auth.permissions.includes("returns.create") ? (
+                                <Button variant="outline" asChild>
+                                    <Link
+                                        href={createReturn.url(team, {
+                                            query: { sale_id: sale.id },
+                                        })}
+                                    >
+                                        <Undo2 /> {t("Return goods")}
+                                    </Link>
+                                </Button>
+                            ) : null}
+                            <Button variant="outline" asChild>
+                                <Link href={index(team).url}>
+                                    <ArrowLeft /> {t("Sales")}
+                                </Link>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-6 p-6">
                         <table className="w-full text-sm">

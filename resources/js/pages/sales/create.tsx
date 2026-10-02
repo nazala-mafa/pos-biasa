@@ -48,7 +48,7 @@ export default function SalesCreate({
     const [cart, setCart] = useState<Record<number, number>>({});
     const [customerId, setCustomerId] = useState("");
     const [paymentMethod, setPaymentMethod] = useState(
-        paymentMethods[0]?.value ?? "cash",
+        paymentMethods[0]?.value ?? "",
     );
     const [discount, setDiscount] = useState("");
     const [paid, setPaid] = useState("");
@@ -102,7 +102,7 @@ export default function SalesCreate({
             store(team).url,
             {
                 customer_id: customerId || null,
-                payment_method: paymentMethod,
+                payment_method_id: paymentMethod,
                 discount: discountValue,
                 paid: paidValue,
                 note: note || null,
@@ -342,7 +342,7 @@ export default function SalesCreate({
                                     </option>
                                 ))}
                             </NativeSelect>
-                            <InputError message={errors.payment_method} />
+                            <InputError message={errors.payment_method_id} />
                         </div>
 
                         <div className="grid gap-2">

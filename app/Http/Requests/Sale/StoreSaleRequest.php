@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests\Sale;
 
-use App\Enums\PaymentMethod;
 use App\Http\Requests\Concerns\OutletRecordRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreSaleRequest extends FormRequest
 {
@@ -26,7 +24,7 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'customer_id' => ['nullable', $this->existsInOutlet('customers')],
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
+            'payment_method_id' => ['required', $this->existsInOutlet('payment_methods')],
             'items' => ['required', 'array', 'min:1', 'max:200'],
             'items.*.product_id' => ['required', 'integer', $this->existsInOutlet('products')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:9999999999999'],

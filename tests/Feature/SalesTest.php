@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockMovement;
@@ -16,6 +17,7 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->admin = User::factory()->create()->assignRole(testRole('admin'));
     $this->outletId = $this->admin->current_team_id;
+    $this->cashId = PaymentMethod::where('team_id', $this->outletId)->where('name', 'Cash')->value('id');
 });
 
 function stockedProduct(int $outletId, int $stock, array $attributes = []): Product
@@ -32,7 +34,7 @@ test('checkout prices lines server side, deducts stock and returns the change', 
 
     $this->actingAs($this->admin)
         ->post(route('sales.store'), [
-            'payment_method' => 'cash',
+            'payment_method_id' => $this->cashId,
             'discount' => 1000,
             'paid' => 50000,
             'items' => [['product_id' => $product->id, 'quantity' => 3]],
@@ -56,11 +58,11 @@ test('checkout is rejected when stock is insufficient or payment is short', func
     $product = stockedProduct($this->outletId, 2, ['selling_price' => 1000]);
 
     $this->actingAs($this->admin)
-        ->post(route('sales.store'), ['payment_method' => 'cash', 'paid' => 5000, 'items' => [['product_id' => $product->id, 'quantity' => 3]]])
+        ->post(route('sales.store'), ['payment_method_id' => $this->cashId, 'paid' => 5000, 'items' => [['product_id' => $product->id, 'quantity' => 3]]])
         ->assertSessionHasErrors('items');
 
     $this->actingAs($this->admin)
-        ->post(route('sales.store'), ['payment_method' => 'cash', 'paid' => 1500, 'items' => [['product_id' => $product->id, 'quantity' => 2]]])
+        ->post(route('sales.store'), ['payment_method_id' => $this->cashId, 'paid' => 1500, 'items' => [['product_id' => $product->id, 'quantity' => 2]]])
         ->assertSessionHasErrors('paid');
 
     expect(Sale::count())->toBe(0)->and((float) $product->stockMovements()->sum('quantity'))->toBe(2.0);
@@ -72,7 +74,7 @@ test('checkout rejects products and customers of other outlets', function () {
 
     $this->actingAs($this->admin)
         ->post(route('sales.store'), [
-            'payment_method' => 'cash', 'paid' => 1, 'customer_id' => $foreignCustomer->id,
+            'payment_method_id' => $this->cashId, 'paid' => 1, 'customer_id' => $foreignCustomer->id,
             'items' => [['product_id' => $foreignProduct->id, 'quantity' => 1]],
         ])
         ->assertSessionHasErrors(['customer_id', 'items.0.product_id']);

@@ -25,9 +25,14 @@ import { dashboard as adminDashboard } from "@/routes/admin";
 import { index as customersIndex } from "@/routes/customers";
 import { index as inventoryIndex } from "@/routes/inventory";
 import { index as productsIndex } from "@/routes/products";
+import { index as purchasesIndex } from "@/routes/purchases";
+import { index as returnsIndex } from "@/routes/returns";
+import { index as shiftsIndex } from "@/routes/shifts";
+import { index as stockOpnamesIndex } from "@/routes/stock-opnames";
 import { index as salesIndex } from "@/routes/sales";
 import { index as suppliersIndex } from "@/routes/suppliers";
 import { index as categoriesIndex } from "@/routes/master-data/categories";
+import { index as paymentMethodsIndex } from "@/routes/master-data/payment-methods";
 import { index as pricesIndex } from "@/routes/master-data/prices";
 import { index as taxesIndex } from "@/routes/master-data/taxes";
 import { index as unitsIndex } from "@/routes/master-data/units";
@@ -55,6 +60,11 @@ export function AppSidebar() {
         { title: t('Unit'), href: unitsIndex(team), permission: "units.view" },
         { title: t('Price'), href: pricesIndex(team), permission: "prices.view" },
         { title: t('Tax'), href: taxesIndex(team), permission: "taxes.view" },
+        {
+            title: t('Payment Methods'),
+            href: paymentMethodsIndex(team),
+            permission: "payment-methods.view",
+        },
     ]
         .filter((item) => permissions.includes(item.permission))
         .map(({ permission: _permission, ...item }) => item);
@@ -73,6 +83,16 @@ export function AppSidebar() {
             permission: "sales.view",
         },
         {
+            title: t('Returns'),
+            href: returnsIndex(team),
+            permission: "returns.view",
+        },
+        {
+            title: t('Cashier Shifts'),
+            href: shiftsIndex(team),
+            permission: "shifts.view",
+        },
+        {
             title: t('Products'),
             href: productsIndex(team),
             permission: "products.view",
@@ -88,9 +108,19 @@ export function AppSidebar() {
             permission: "suppliers.view",
         },
         {
+            title: t('Purchases'),
+            href: purchasesIndex(team),
+            permission: "purchases.view",
+        },
+        {
             title: t('Inventory'),
             href: inventoryIndex(team),
             permission: "inventory.view",
+        },
+        {
+            title: t('Stock Opname'),
+            href: stockOpnamesIndex(team),
+            permission: "stock-opnames.view",
         },
     ]);
 

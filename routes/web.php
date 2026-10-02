@@ -3,16 +3,21 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OutletController as AdminOutletController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\MasterData\PaymentMethodController;
 use App\Http\Controllers\MasterData\PriceController;
 use App\Http\Controllers\MasterData\ProductCategoryController;
 use App\Http\Controllers\MasterData\TaxController;
 use App\Http\Controllers\MasterData\UnitController;
+use App\Http\Controllers\Pos\CashierShiftController;
 use App\Http\Controllers\Pos\CustomerController;
 use App\Http\Controllers\Pos\DashboardController;
 use App\Http\Controllers\Pos\InventoryController;
 use App\Http\Controllers\Pos\ProductController;
+use App\Http\Controllers\Pos\PurchaseOrderController;
 use App\Http\Controllers\Pos\RoleController;
 use App\Http\Controllers\Pos\SaleController;
+use App\Http\Controllers\Pos\SaleReturnController;
+use App\Http\Controllers\Pos\StockOpnameController;
 use App\Http\Controllers\Pos\SupplierController;
 use App\Http\Controllers\Pos\UserController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -43,6 +48,14 @@ Route::prefix('{current_team}')
         Route::resource('suppliers', SupplierController::class)->except('show');
         Route::resource('sales', SaleController::class)->only(['index', 'create', 'store', 'show']);
 
+        Route::resource('returns', SaleReturnController::class)->only(['index', 'create', 'store', 'show']);
+        Route::resource('shifts', CashierShiftController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('shifts/{shift}/close', [CashierShiftController::class, 'close'])->name('shifts.close');
+        Route::resource('purchases', PurchaseOrderController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('purchases/{purchase}/receive', [PurchaseOrderController::class, 'receive'])->name('purchases.receive');
+        Route::post('purchases/{purchase}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchases.cancel');
+        Route::resource('stock-opnames', StockOpnameController::class)->only(['index', 'create', 'store', 'show']);
+
         Route::prefix('inventory')
             ->name('inventory.')
             ->controller(InventoryController::class)
@@ -65,6 +78,7 @@ Route::prefix('{current_team}')
                 Route::resource('units', UnitController::class)->except('show');
                 Route::resource('prices', PriceController::class)->except('show');
                 Route::resource('taxes', TaxController::class)->except('show');
+                Route::resource('payment-methods', PaymentMethodController::class)->except('show');
             });
     });
 
